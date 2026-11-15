@@ -33,7 +33,7 @@ export function LogEntry({ e, info, onExhibit, highlight, extra }: { e: RecordEn
   const tags = e.tags.filter((t) => t.type !== "claim_flagged" || e.speaker.kind !== "player");
   return (
     <li id={`log-${e.id}`} className={`log-entry sp-${e.speaker.kind}${clerk ? " clerk" : ""}${e.stricken ? " stricken" : ""}${highlight ? " highlight" : ""}`}>
-      {!clerk && <Portrait design={designFor(designKey(e))} seed={designKey(e)} size={44} bg="#2d3f58" className="log-face" />}
+      {!clerk && <Portrait design={designFor(designKey(e))} seed={designKey(e)} size={44} bg="#2b241e" className="log-face" />}
       <div className="log-body">
         {!clerk && (
           <div className="log-head">

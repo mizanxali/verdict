@@ -77,7 +77,7 @@ export function VerdictBoard({
           const on = i < revealed;
           return (
             <li key={v.jurorId} className={`vb-vote${on ? " on" : ""} ${v.vote}`}>
-              <Portrait design={designFor(v.jurorId)} seed={v.jurorId} size={84} bg="#2d3f58" />
+              <Portrait design={designFor(v.jurorId)} seed={v.jurorId} size={84} bg="#2b241e" />
               <span className="vb-name">{j?.name ?? v.jurorId}</span>
               <span className="vb-card" aria-label={on ? (v.vote === "not_guilty" ? "Not guilty" : "Guilty") : "Not yet revealed"}>
                 <span className="vb-card-back">?</span>

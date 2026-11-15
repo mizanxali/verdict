@@ -2,7 +2,7 @@
 
 A courtroom game where you are the defence lawyer and everyone else in the room is played by AI.
 
-![The Verdict title screen: an illustrated courtroom with the judge, jury and both counsel tables](docs/screenshots/title.png)
+![The Verdict title screen over the rendered courtroom: walnut panelling, arched windows and the seal of Aldermere](docs/screenshots/title.png)
 
 You get one trial, about fifteen minutes long. You read the case file, give your opening, cross-examine the prosecution's witnesses, defend your client on the stand, and close. You type, or speak, whatever you want to say. Then five jurors decide, and you get to see exactly what changed each of their minds.
 
@@ -34,7 +34,7 @@ Somebody in that courtroom is lying. The documents in your case file can prove i
 
 ## How it plays
 
-- **A 2D courtroom.** An illustrated stage with the judge at the bench, the witness stand, the jury box and both counsel tables. Witnesses walk in when called and leave when excused. Your client sits beside you until it is her turn on the stand.
+- **A rendered courtroom.** A walnut-panelled room built and lit in Blender, with late sun through the windows, the judge at the bench, the witness stand, the jury box and both counsel tables. The cast stands inside its depth layers, so furniture hides whoever is behind it. Witnesses walk in when called and leave when excused. Your client sits beside you until it is her turn on the stand.
 - **Speech bubbles and voices.** Dialogue plays one beat at a time in bubbles above whoever is speaking, and each character has their own voice.
 - **Speak your questions.** Hold to talk and your words land in the question box, ready to edit before you ask.
 - **The case file.** A binder you can open at any moment: the brief, ten exhibits styled as the documents they are, witness statements, the rules of the court, and the jurors.
@@ -162,4 +162,15 @@ Each juror has their own threshold for acquittal and votes not guilty if their f
 **Both sides go through the same referees.** The prosecutor's statements are fact-checked, his questions can be struck, and his credibility falls by the same amounts as yours.
 
 **One hand-written case.** The case is a single structured file: the true timeline, the exhibits, and for each witness what they know, what they lie about and what breaks each lie. It is the same puzzle for every player.
+
+## The art
+
+The courtroom, the jury room and every prop in the interface (the seal, the gavel, the wax seal for a broken lie, one object per kind of exhibit) are rendered in Blender from scripts in [`art/blender`](art/blender). Nothing is hand-painted, so the set can be changed and re-rendered.
+
+- `courtroom.py` builds the room in metres and assigns each piece of furniture to the depth layer it occupies on the stage.
+- `render.py` renders those layers with transparent backgrounds, plus a pass of light in the air, and writes a manifest. It projects where every figure stands, how large it is at that depth and how far a seated figure sinks, all from the same camera, so the 2D cast and the 3D set always agree.
+- `props.py` and `juryroom.py` render the props and the jury room backdrop.
+- `art/encode.sh` crops and converts the renders to WebP in `web/public/art`, and writes `web/src/stage/court.json`.
+
+To re-render, open Blender with the MCP add-on, or the Scripting workspace, run the scripts in that order, then run `art/encode.sh`.
 

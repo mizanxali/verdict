@@ -3,6 +3,7 @@
  * text into fields, log rows and prose; the exhibit's kind picks the paper it is printed on.
  */
 import type { Exhibit } from "../../../src/shared/types";
+import { exhibitArt } from "../art/assets";
 
 type Block = { t: "fields"; rows: [string, string][] } | { t: "rows"; rows: string[][] } | { t: "prose"; lines: string[] };
 
@@ -60,6 +61,11 @@ export function skinOf(ex: Exhibit): DocSkin {
   if (k.includes("insurance") || k.includes("policy") || k.includes("contract")) return "insurance";
   if (k.includes("parking") || k.includes("ticket") || k.includes("receipt")) return "ticket";
   return "generic";
+}
+
+/** The exhibit as a rendered object: a statement, a CCTV print, a clipboard log... */
+export function ExhibitThumb({ skin, className }: { skin: DocSkin; className?: string }) {
+  return <img className={`ex-thumb ${className ?? ""}`} src={exhibitArt(skin)} alt="" draggable={false} decoding="async" />;
 }
 
 export function KindGlyph({ skin }: { skin: DocSkin }) {

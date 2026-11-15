@@ -1,6 +1,7 @@
 /** Heads-up display: progress, credibility, exposed contradictions, cost, menus. */
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Phase, PlayerView } from "../../../src/shared/types";
+import { ART } from "../art/assets";
 import { IconFolder, IconPlay, IconScroll } from "../art/Icons";
 import { formatCost, phaseLabel, type CaseInfo } from "../labels";
 
@@ -19,6 +20,7 @@ function PhaseTrack({ phase, info }: { phase: Phase; info: CaseInfo }) {
   const at = ORDER.indexOf(phase);
   return (
     <div className="hud-track">
+      <span className="hud-phase-name">{phaseLabel(phase, info)}</span>
       <ol aria-label="Trial progress">
         {STEPS.map((s, i) => {
           const first = ORDER.indexOf(s.phases[0]!);
@@ -40,7 +42,6 @@ function PhaseTrack({ phase, info }: { phase: Phase; info: CaseInfo }) {
           );
         })}
       </ol>
-      <span className="hud-phase-name">{phaseLabel(phase, info)}</span>
     </div>
   );
 }
@@ -117,8 +118,8 @@ export function ContradictionStamps({ lies, info }: { lies: PlayerView["exposedL
         lies.map((l) => {
           const w = info.witnesses.find((x) => x.id === l.witnessId);
           return (
-            <span key={l.lieId} className="hud-stamp" tabIndex={0} title={`${w?.name ?? ""}: ${l.label}`}>
-              <span className="hud-stamp-mark">✕</span>
+            <span key={l.lieId} className="hud-stamp" tabIndex={0} aria-label={`${w?.name ?? ""}: ${l.label}`}>
+              <img src={ART.wax} alt="" draggable={false} />
               <span className="hud-stamp-pop" role="tooltip">
                 <b>{w?.name}</b> {l.label}
               </span>
@@ -156,23 +157,23 @@ export function Hud({
   return (
     <div className="hud" onClick={(e) => e.stopPropagation()}>
       <div className="hud-left">
-        <span className="hud-crest" aria-hidden>
-          ⚖
-        </span>
+        <img className="hud-crest" src={ART.seal} alt="" aria-hidden draggable={false} />
         <PhaseTrack phase={phase} info={info} />
       </div>
       <div className="hud-right">
         <div className="hud-meters" aria-label="Credibility">
-          <Meter label="You" value={view.credibility.defence} side="defence" />
-          <Meter label="Pros." value={view.credibility.prosecution} side="prosecution" />
+          <Meter label="Defence" value={view.credibility.defence} side="defence" />
+          <Meter label="Prosecution" value={view.credibility.prosecution} side="prosecution" />
         </div>
+        <span className="hud-sep" aria-hidden />
         <ContradictionStamps lies={lies} info={info} />
+        <span className="hud-sep" aria-hidden />
         <CostChip usage={view.usage} voice={view.voice} />
         <button type="button" className="icon-btn" onClick={onCaseFile} aria-keyshortcuts="C">
           <IconFolder /> Case file <kbd>C</kbd>
         </button>
         <button type="button" className="icon-btn" onClick={onLog} aria-keyshortcuts="T">
-          <IconScroll /> Log <kbd>T</kbd>
+          <IconScroll /> Transcript <kbd>T</kbd>
         </button>
         <button type="button" className="icon-btn" onClick={onAuto} aria-pressed={auto} aria-keyshortcuts="A" title="Auto-advance dialogue">
           <IconPlay /> Auto <kbd>A</kbd>

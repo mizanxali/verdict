@@ -2,9 +2,7 @@
 .stage-frame {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 40%, #241d33 0%, #0d0a13 70%),
-    var(--night);
+  background: radial-gradient(ellipse at 50% 45%, #1a1511 0%, var(--ink-950) 72%);
   overflow: hidden;
 }
 .stage {
@@ -14,8 +12,10 @@
   transform-origin: 50% 50%;
   overflow: hidden;
   overflow: clip;
-  background: #1a1422;
-  box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+  background: #0f0c0a;
+  box-shadow:
+    0 0 0 1px rgba(201, 163, 82, 0.08),
+    0 30px 120px rgba(0, 0, 0, 0.7);
   font-size: 20px;
 }
 
@@ -27,35 +27,48 @@
 .camera {
   position: absolute;
   inset: 0;
-  transition:
-    transform 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
-    transform-origin 1.1s cubic-bezier(0.3, 0.7, 0.2, 1);
+  transition-property: transform, transform-origin, filter;
+  transition-duration: 1.2s, 1.2s, 0.35s;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1), cubic-bezier(0.3, 0.7, 0.2, 1), ease;
   will-change: transform;
 }
 .scene-svg {
   display: block;
 }
 .court-scene.freeze .camera {
-  filter: saturate(0.55) brightness(0.92);
-  transition:
-    transform 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
-    transform-origin 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
-    filter 0.35s ease;
+  filter: saturate(0.6) brightness(0.86) contrast(1.04);
 }
-.camera {
-  transition-property: transform, transform-origin, filter;
+
+/* the cast stands in the room's light: a touch warmer and lower in contrast than flat fills */
+.scene-svg .actor > g {
+  filter: url(#f-cast);
+}
+
+.haze {
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: haze-drift 14s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes haze-drift {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 0.95;
+  }
 }
 
 .spotlight {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle 420px at var(--fx) var(--fy), rgba(255, 236, 190, 0.1) 0%, rgba(255, 236, 190, 0) 45%, rgba(10, 6, 18, 0.42) 100%);
+  background: radial-gradient(circle 360px at var(--fx) var(--fy), rgba(255, 226, 170, 0.08) 0%, rgba(255, 226, 170, 0) 42%, rgba(6, 4, 3, 0.38) 100%);
   opacity: 0;
   transition:
-    --fx 0.9s ease,
-    --fy 0.9s ease,
-    opacity 0.6s ease;
+    --fx 1s var(--ease-out),
+    --fy 1s var(--ease-out),
+    opacity 0.7s ease;
 }
 .spotlight.on {
   opacity: 1;
@@ -64,52 +77,38 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(8, 4, 14, 0.55) 100%);
+  background:
+    radial-gradient(ellipse 75% 80% at 50% 46%, transparent 58%, rgba(6, 4, 3, 0.55) 100%),
+    linear-gradient(180deg, rgba(6, 4, 3, 0.5) 0%, transparent 14%, transparent 84%, rgba(6, 4, 3, 0.35) 100%);
 }
 
-.svg-sign {
-  font: 700 13px var(--font-display);
-  letter-spacing: 0.22em;
-  fill: var(--cream);
-  opacity: 0.85;
+/* live text cut into the brass nameplates */
+.plate-text text {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0.14em;
 }
-.svg-plate {
-  font: 700 10px var(--font-display);
-  letter-spacing: 0.12em;
-  fill: #4a2c10;
+.plate-ink {
+  fill: #3b2a12;
 }
-.stand-plate {
-  font-size: 13px;
+.plate-light {
+  fill: rgba(255, 236, 190, 0.55);
 }
 
 /* ───────────── scenery motion ───────────── */
 .door-leaf {
-  transition: transform 0.45s cubic-bezier(0.4, 0.1, 0.2, 1);
+  transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1);
 }
 .door-leaf.open {
-  transform: scaleX(0.16);
+  transform: scaleX(0.14) skewY(-4deg);
 }
 .door-spill {
-  transition: opacity 0.4s;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  mix-blend-mode: screen;
 }
-.lamp-glow {
-  animation: lamp 6s ease-in-out infinite alternate;
-}
-@keyframes lamp {
-  from {
-    opacity: 0.85;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.clock-hand-m {
-  animation: clock 120s linear infinite;
-}
-@keyframes clock {
-  to {
-    transform: rotate(360deg);
-  }
+.door-spill.open {
+  opacity: 1;
 }
 
 /* ───────────── actors ───────────── */
@@ -306,7 +305,7 @@
   .ch-walking .ch-upper,
   .ch-breathe,
   .ch-shocked .ch-upper,
-  .clock-hand-m {
+  .haze {
     animation: none !important;
   }
   .actor {

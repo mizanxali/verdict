@@ -19,16 +19,17 @@ export function speakerKey(b: Pick<Beat, "speaker">): string {
 }
 
 function placementFor(key: string, kind: Beat["kind"]): Placement {
-  if (kind === "statement") return { x: 380, w: 840, bottom: 372, maxH: 300 };
+  // Cards sit clear of the speaker's face, toward the middle of the room, so the tail reads.
+  if (kind === "statement") return { x: 330, w: 940, bottom: 462, maxH: 360 };
   switch (key) {
     case "judge":
-      return { x: 232, w: 492, top: 70, maxH: 196 };
+      return { x: 470, w: 660, bottom: 318, maxH: 228 };
     case "prosecutor":
-      return { x: 548, w: 492, bottom: 470, maxH: 214 };
+      return { x: 560, w: 520, bottom: 462, maxH: 280 };
     case "player":
-      return { x: 690, w: 430, bottom: 470, maxH: 214 };
+      return { x: 640, w: 520, bottom: 462, maxH: 280 };
     default:
-      return { x: 1214, w: 370, top: 74, maxH: 420 };
+      return { x: 1000, w: 572, bottom: 372, maxH: 282 };
   }
 }
 

@@ -1,6 +1,7 @@
 /** After the verdict: inside the jury room, each juror's mind from first word to final vote. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LeanChange, PlayerView } from "../../../src/shared/types";
+import { ART } from "../art/assets";
 import { Portrait } from "../art/Character";
 import { designFor } from "../art/cast";
 import { LeanChart } from "../components/LeanChart";
@@ -50,7 +51,7 @@ function Notes({
   return (
     <section className="jr-notes" style={{ ["--juror" as string]: color }} aria-label={`${juror.name}'s deliberation`}>
       <header className="jr-notes-head">
-        <Portrait design={designFor(juror.jurorId)} seed={juror.jurorId} size={92} bg="#efe3c8" mood={vote?.vote === "not_guilty" ? "neutral" : "stern"} />
+        <Portrait design={designFor(juror.jurorId)} seed={juror.jurorId} size={92} bg="#2b241e" mood={vote?.vote === "not_guilty" ? "neutral" : "stern"} />
         <div>
           <h2>{juror.name}</h2>
           <p>{persona}</p>
@@ -174,10 +175,7 @@ export function JuryRoom({
 
   return (
     <div className="jury-room">
-      <div className="jr-wall" aria-hidden>
-        <div className="jr-window" />
-        <div className="jr-clock" />
-      </div>
+      <div className="jr-backdrop" aria-hidden style={{ backgroundImage: `url(${ART.juryRoom})` }} />
       <header className={`jr-top ${verdict.outcome}`}>
         <div>
           <span className="jr-kicker">Inside the jury room · {info.title}</span>

@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import type { ObjectionType } from "../../../src/shared/types";
 import { MAX_TEXT } from "../api";
+import { exhibitArt } from "../art/assets";
 import { IconDoc } from "../art/Icons";
+import { skinOf } from "../overlays/Documents";
 import type { CaseInfo } from "../labels";
 import { isTypingTarget } from "../util";
 import { insertAt } from "../voice/text";
@@ -112,7 +114,7 @@ export function QuestionBar({
     <div className="controls qbar" onClick={stop} role="group" aria-label={`Cross-examine ${witnessName}`}>
       <div className="qbar-top">
         <span className="qbar-title">
-          Your question to <b>{witnessName}</b>
+          Cross-examining <b>{witnessName}</b>
         </span>
         <Pips left={left} total={total} />
         <span className="qbar-left">
@@ -123,7 +125,7 @@ export function QuestionBar({
             const ex = info.evidence.find((e) => e.id === id);
             return (
               <span key={id} className="attached-chip">
-                <IconDoc /> <b>{id}</b> {ex?.title}
+                {ex ? <img src={exhibitArt(skinOf(ex))} alt="" /> : <IconDoc />} <b>{id}</b> {ex?.title}
                 <button type="button" aria-label={`Remove ${id}`} onClick={() => onDetach(id)}>
                   ×
                 </button>
@@ -134,7 +136,10 @@ export function QuestionBar({
       </div>
       <div className="qbar-row">
         <button type="button" className="btn evidence-btn" onClick={onEvidence} disabled={busy} aria-keyshortcuts="E Control+E Meta+E" title="E, or Ctrl/⌘+E while typing">
-          <IconDoc /> Present evidence{attached.length ? ` (${attached.length})` : ""} <span className="kbd-hint">⌘E</span>
+          <span className="ev-btn-top">
+            <IconDoc /> Present evidence <span className="kbd-hint">⌘E</span>
+          </span>
+          <span className="hint">{attached.length ? `${attached.length} attached` : `${info.evidence.length} exhibits in the file`}</span>
         </button>
         <textarea
           ref={ref}
@@ -216,6 +221,7 @@ export function ObjectionPad({
       <div className="objpad-head">
         <span className="objpad-call">Object?</span>
         <span className="objpad-sub">Call it before the witness answers. A groundless objection costs credibility.</span>
+        <span className="objpad-timer">Press 1–6, or L to let it stand</span>
       </div>
       <div className="objpad-row">
         {info.rules.objections.map((o, i) => (

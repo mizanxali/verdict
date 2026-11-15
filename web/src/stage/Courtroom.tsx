@@ -8,7 +8,7 @@ import { Character, type Design, type Mood, type Pose } from "../art/Character";
 import { designFor } from "../art/cast";
 import { clamp, prefersReducedMotion } from "../util";
 import { headOf, JUROR_SEATS, SPOTS, spotTransform, STAGE_H, STAGE_W, type Spot } from "./layout";
-import { BackWall, Bench, ClerkDesk, CounselTable, DoorLeaf, GalleryRail, JuryBack, JuryFront, JuryMid, SceneDefs, WitnessStand } from "./Scene";
+import { BackWall, Bench, ClerkDesk, CounselTables, DoorLeaf, GalleryRail, Haze, JuryBack, JuryFront, JuryMid, SceneDefs, WitnessStand } from "./Scene";
 
 export interface CourtState {
   inSession: boolean;
@@ -31,14 +31,14 @@ export interface CourtState {
 
 type At = "door" | "stand" | "defendant";
 
-const WALK_SPEED = 230; // design units per second
+const WALK_SPEED = 170; // design units per second (the figures are smaller in the rendered room)
 
 /** Waypoints for a witness walking between two places. */
 function route(from: At, to: At): Spot[] {
   const seated: Spot = SPOTS.defendant;
   const up: Spot = SPOTS.defendantUp;
-  const mid1: Spot = { x: 640, y: 646, s: 0.93 };
-  const mid2: Spot = { x: 930, y: 560, s: 0.86 };
+  const mid1: Spot = SPOTS.mid1;
+  const mid2: Spot = SPOTS.mid2;
   const paths: Record<string, Spot[]> = {
     "door>stand": [SPOTS.door, SPOTS.doorway, SPOTS.stand],
     "stand>door": [SPOTS.stand, SPOTS.doorway, SPOTS.door],
@@ -176,7 +176,7 @@ export interface Camera {
 export function cameraFor(s: CourtState): Camera {
   if (!s.push || !s.speaker || s.speaker === "clerk" || prefersReducedMotion()) return { z: 1, ox: STAGE_W / 2, oy: STAGE_H / 2 };
   const h = actorHead(s.speaker, s);
-  return { z: 1.07, ox: h.x, oy: clamp(h.y + 120, 200, 700) };
+  return { z: 1.12, ox: h.x, oy: clamp(h.y + 90, 200, 700) };
 }
 
 export const toScreen = (cam: Camera, p: { x: number; y: number }) => ({
@@ -226,7 +226,7 @@ export function Courtroom({ s, overlay }: { s: CourtState; overlay?: ReactNode }
   const cam = cameraFor(s);
   const speakerHead = s.speaker && s.speaker !== "clerk" ? actorHead(s.speaker, s) : null;
   const tx = speakerHead?.x ?? null;
-  const spot = speakerHead ? toScreen(cam, { x: speakerHead.x, y: speakerHead.y + 70 }) : { x: 800, y: 420 };
+  const spot = speakerHead ? toScreen(cam, { x: speakerHead.x, y: speakerHead.y + 48 }) : { x: 800, y: 420 };
 
   const witnessAt = (id: string): At => (s.stand === id ? "stand" : id === s.defendantId ? "defendant" : "door");
   const witnessSpot = (id: string): Spot => {
@@ -283,7 +283,7 @@ export function Courtroom({ s, overlay }: { s: CourtState; overlay?: ReactNode }
       <div className="camera" style={{ transform: `scale(${cam.z})`, transformOrigin: `${cam.ox}px ${cam.oy}px` }}>
         <svg className="scene-svg" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} width={STAGE_W} height={STAGE_H} aria-hidden>
           <SceneDefs />
-          <BackWall doorOpen={doorOpen} />
+          <BackWall />
           <Actor
             seed="judge"
             design={designFor("judge")}
@@ -306,14 +306,14 @@ export function Courtroom({ s, overlay }: { s: CourtState; overlay?: ReactNode }
             look={s.speaker === "clerk" ? 0.6 : lookAt(SPOTS.clerk.x, tx)}
           />
           <ClerkDesk />
-          <g className="witness-layer">{witnesses}</g>
-          <DoorLeaf open={doorOpen} />
-          <WitnessStand name={s.standName} />
           <JuryBack />
           <g>{jurors.slice(0, 3)}</g>
           <JuryMid />
           <g>{jurors.slice(3)}</g>
           <JuryFront />
+          <g className="witness-layer">{witnesses}</g>
+          <DoorLeaf open={doorOpen} />
+          <WitnessStand name={s.standName} />
           <Actor
             seed="prosecutor"
             design={designFor("prosecutor")}
@@ -334,9 +334,9 @@ export function Courtroom({ s, overlay }: { s: CourtState; overlay?: ReactNode }
             look={s.speaker === "player" ? 0.5 : lookAt(SPOTS.player.x, tx)}
             className="counsel"
           />
-          <CounselTable side="defence" />
-          <CounselTable side="prosecution" />
+          <CounselTables />
           <GalleryRail />
+          <Haze />
         </svg>
       </div>
       <div

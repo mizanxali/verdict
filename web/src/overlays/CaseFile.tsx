@@ -4,7 +4,7 @@ import { Portrait } from "../art/Character";
 import { designFor } from "../art/cast";
 import { IconClose } from "../art/Icons";
 import type { CaseInfo } from "../labels";
-import { ExhibitDocument, KindGlyph, skinOf } from "./Documents";
+import { ExhibitDocument, ExhibitThumb, skinOf } from "./Documents";
 import { Modal } from "./Modal";
 
 export type CaseTab = "brief" | "exhibits" | "witnesses" | "rules" | "jury";
@@ -94,7 +94,7 @@ export function Exhibits({ info, admitted, focus, onFocus }: { info: CaseInfo; a
           <button key={e.id} type="button" className={`ex-card${e.id === ex?.id ? " on" : ""}`} onClick={() => onFocus(e.id)} aria-current={e.id === ex?.id}>
             <span className="ex-card-id">{e.id}</span>
             <span className="ex-card-glyph">
-              <KindGlyph skin={skinOf(e)} />
+              <ExhibitThumb skin={skinOf(e)} />
             </span>
             <span className="ex-card-title">{e.title}</span>
             {admitted.includes(e.id) && <span className="ex-card-admitted">Admitted</span>}
@@ -117,7 +117,7 @@ function Witnesses({ info }: { info: CaseInfo }) {
       {info.witnesses.map((w, i) => (
         <article key={w.id} className="wit-card">
           <header>
-            <Portrait design={designFor(w.id)} seed={w.id} size={112} bg="#2d3f58" className="wit-portrait" />
+            <Portrait design={designFor(w.id)} seed={w.id} size={112} bg="#2b241e" className="wit-portrait" />
             <div>
               <span className="wit-order">{i === 2 ? "Your client · cross-examined by the prosecution" : `Prosecution witness ${i + 1}`}</span>
               <h3>{w.name}</h3>
@@ -173,7 +173,7 @@ function Jury({ info }: { info: CaseInfo }) {
       <div className="jury-grid">
         {info.jurors.map((j, i) => (
           <article key={j.id} className="juror-card">
-            <Portrait design={designFor(j.id)} seed={j.id} size={120} bg="#3a2a2e" />
+            <Portrait design={designFor(j.id)} seed={j.id} size={120} bg="#2b241e" />
             <span className="juror-seat">Seat {i + 1}</span>
             <h4>{j.name}</h4>
             <p>{j.persona}</p>

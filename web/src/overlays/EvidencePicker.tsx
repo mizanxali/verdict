@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { IconClose } from "../art/Icons";
 import type { CaseInfo } from "../labels";
-import { ExhibitDocument, KindGlyph, skinOf } from "./Documents";
+import { ExhibitDocument, ExhibitThumb, skinOf } from "./Documents";
 import { Modal } from "./Modal";
 
 export function EvidencePicker({
@@ -45,7 +45,7 @@ export function EvidencePicker({
                   </span>
                   <span className="ev-id">{e.id}</span>
                   <span className="ev-glyph">
-                    <KindGlyph skin={skinOf(e)} />
+                    <ExhibitThumb skin={skinOf(e)} />
                   </span>
                   <span className="ev-title">{e.title}</span>
                   <span className="ev-kind">{e.kind}</span>

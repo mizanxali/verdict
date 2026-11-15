@@ -1,4 +1,13 @@
-/** Stage geometry in design units (the stage is always 1600 x 900, scaled to fit). */
+/**
+ * Stage geometry in design units (the stage is always 1600 x 900, scaled to fit).
+ *
+ * The courtroom is a Blender render (art/blender). Where each figure stands, how large it
+ * is at that depth, and how far a seated figure sinks behind furniture all come from the
+ * render's manifest (court.json), projected from the same camera, so the cast and the set
+ * always agree.
+ */
+import court from "./court.json";
+
 export const STAGE_W = 1600;
 export const STAGE_H = 900;
 
@@ -11,28 +20,48 @@ export interface Spot {
   hidden?: boolean;
 }
 
+type Raw = { x: number; y: number; s: number; sink?: number };
+const raw = court.spots as Record<string, Raw>;
+const at = (k: string): Spot => {
+  const r = raw[k];
+  if (!r) throw new Error(`court.json has no spot "${k}"`);
+  return { x: r.x, y: r.y, s: r.s, ...(r.sink ? { sink: r.sink } : {}) };
+};
+const standing = (k: string): Spot => {
+  const { sink: _sink, ...rest } = at(k);
+  return rest;
+};
+
 export const SPOTS = {
-  judge: { x: 800, y: 470, s: 0.9 },
-  clerk: { x: 515, y: 522, s: 0.74, sink: 30 },
-  stand: { x: 1150, y: 522, s: 0.84 },
-  door: { x: 1402, y: 522, s: 0.84, hidden: true },
-  doorway: { x: 1402, y: 522, s: 0.84 },
-  player: { x: 664, y: 800, s: 1.06, sink: 64 },
-  playerUp: { x: 664, y: 800, s: 1.06 },
-  defendant: { x: 484, y: 800, s: 1, sink: 64 },
-  defendantUp: { x: 484, y: 800, s: 1 },
-  prosecutor: { x: 1086, y: 800, s: 1.07, sink: 64 },
-  prosecutorUp: { x: 1086, y: 800, s: 1.07 },
+  judge: at("judge"),
+  clerk: at("clerk"),
+  stand: at("stand"),
+  door: { ...at("doorway"), hidden: true },
+  doorway: at("doorway"),
+  player: at("player"),
+  playerUp: standing("player"),
+  defendant: at("defendant"),
+  defendantUp: standing("defendant"),
+  prosecutor: at("prosecutor"),
+  prosecutorUp: standing("prosecutor"),
+  mid1: at("mid1"),
+  mid2: at("mid2"),
 } satisfies Record<string, Spot>;
 
 /** Five seats: three on the raised back row, two in front. */
-export const JUROR_SEATS: Spot[] = [
-  { x: 92, y: 474, s: 0.74, sink: 44 },
-  { x: 212, y: 474, s: 0.74, sink: 44 },
-  { x: 332, y: 474, s: 0.74, sink: 44 },
-  { x: 152, y: 566, s: 0.8, sink: 44 },
-  { x: 274, y: 566, s: 0.8, sink: 44 },
-];
+export const JUROR_SEATS: Spot[] = [0, 1, 2, 3, 4].map((i) => at(`juror${i}`));
+
+export type Quad = [number, number][];
+export const PLATES = court.plates as { bench: Quad; stand: Quad };
+export const DOOR_LEAF = court.doorLeaf as Quad;
+
+export interface LayerRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+export const LAYERS = court.layers as Record<string, LayerRect>;
 
 /** Head-top position of a figure standing at a spot (for bubble tails and the spotlight). */
 export function headOf(spot: Spot, height = 1): { x: number; y: number } {

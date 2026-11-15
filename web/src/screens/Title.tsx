@@ -1,6 +1,8 @@
 /** Title card over a quiet courtroom. */
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { ALL_PROPS, preloadArt } from "../art/assets";
+import { ALL_LAYERS, layerUrl } from "../stage/Scene";
 import { Courtroom, type CourtState } from "../stage/Courtroom";
 import { StageFrame } from "../stage/StageFrame";
 
@@ -30,6 +32,8 @@ export function Title({ onStart, onResume, starting, error, lastId }: { onStart:
   const ref = useRef<HTMLButtonElement>(null);
   const [title, setTitle] = useState(DEFAULT_CASE);
   useEffect(() => ref.current?.focus({ preventScroll: true }), []);
+  // warm the cache so the trial opens with every layer and prop already decoded
+  useEffect(() => preloadArt([...ALL_LAYERS.map(layerUrl), ...ALL_PROPS]), []);
   useEffect(() => {
     if (!lastId) return;
     api
@@ -63,6 +67,11 @@ export function Title({ onStart, onResume, starting, error, lastId }: { onStart:
             </button>
           )}
         </div>
+      </div>
+      <div className="title-foot" aria-hidden>
+        <span>About fifteen minutes</span>
+        <span>Type or speak your questions</span>
+        <span>Every claim is checked against the record</span>
       </div>
     </StageFrame>
   );
