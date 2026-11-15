@@ -1,0 +1,199 @@
+/* ───────────── tokens ───────────── */
+@property --fx {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 800px;
+}
+@property --fy {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 420px;
+}
+
+:root {
+  --ink: #1b1726;
+  --ink-2: #2a2438;
+  --ink-3: #3a3350;
+  --night: #120f1a;
+  --cream: #f4e5c4;
+  --paper: #fbf4e2;
+  --paper-2: #f2e8cf;
+  --brass: #e3b04b;
+  --brass-dark: #b9852c;
+  --red: #d44a3c;
+  --red-dark: #9e2f27;
+  --teal: #2f9e8f;
+  --teal-dark: #1f6f65;
+  --defence: #e6a33a;
+  --prosecution: #6c95e0;
+  --slate: #2d3f58;
+  --wood: #7b4529;
+  --wood-dark: #47271a;
+  --muted: #b9b0c8;
+  --font-ui: "Avenir Next", "Avenir", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Avenir Next Condensed", "Futura", "Arial Narrow", "Roboto Condensed", "Avenir Next", system-ui, sans-serif;
+  --font-doc: "Iowan Old Style", "Palatino", "Georgia", "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  --focus: 0 0 0 3px var(--night), 0 0 0 6px #ffd76a;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--night);
+  color: var(--cream);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  padding: 0.05em 0.4em;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom-width: 2px;
+}
+
+/* ───────────── shared buttons ───────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.7em 1.25em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--cream);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.btn:disabled {
+  opacity: 0.45;
+}
+.btn.primary {
+  background: var(--brass);
+  color: var(--ink);
+}
+.btn.primary:hover:not(:disabled) {
+  background: #f0c262;
+}
+.btn.danger {
+  background: var(--red);
+  color: #fff;
+}
+.btn.ghost {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px rgba(244, 229, 196, 0.35);
+}
+.btn.ghost:hover:not(:disabled) {
+  background: rgba(244, 229, 196, 0.1);
+}
+.btn.large {
+  font-size: 1.2em;
+  padding: 0.8em 1.8em;
+  border-radius: 14px;
+}
+.btn.small {
+  font-size: 0.85em;
+  padding: 0.45em 0.8em;
+  border-radius: 9px;
+}
+.btn .kbd-hint {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 0;
+  background: rgba(18, 15, 26, 0.72);
+  color: var(--cream);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(244, 229, 196, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+}
+.icon-btn:hover {
+  background: rgba(40, 33, 56, 0.9);
+}
+.icon-btn[aria-pressed="true"] {
+  background: rgba(227, 176, 75, 0.25);
+  box-shadow: inset 0 0 0 1.5px var(--brass);
+}
+.icon-btn kbd {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.loading-screen {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 1.1rem;
+}

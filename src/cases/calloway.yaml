@@ -1,0 +1,916 @@
+# ════════════════════════════════════════════════════════════════════════════
+#  Commonwealth of Aldermere v. Iris Calloway
+# ════════════════════════════════════════════════════════════════════════════
+#
+#  Validated by src/cases/validate.ts on every load. Run `npx vitest run src/cases`
+#  after editing.
+#
+#  ── Jury tuning ─────────────────────────────────────────────────────────────
+#
+#  Lean runs -10 (convict) to +10 (acquit). A juror votes not guilty when the
+#  final lean >= acquitAt. 4 of 5 votes are needed either way, otherwise hung.
+#  Only the gap (acquitAt - startLean) matters for the arithmetic below.
+#
+#  Assumptions, per juror, over a whole trial:
+#    D     ordinary testimony, net: -1 (range about -2..+1; each exchange
+#          moves a receptive juror 1 at most)
+#    crack what one defence crack is worth to that juror (+1 or +2)
+#    iris  what the prosecutor cracking Iris's lie costs (-1 or -2)
+#
+#    juror       start  acquitAt  gap   Renn crack  Arden crack  iris
+#    osei          -1       0      1       +2          +2         -2   paper
+#    kapoor         0       1      1       +1          +2         -1   anti-institution
+#    lindqvist     -2       0      2       +2          +2         -2   character
+#    hale          -1       0      1       +1          +1         -1   anti-overreach
+#    ashdown       -2      -1      1       +1          +1         -2   authority
+#
+#  Net movement = D + cracks + iris; the juror acquits if net >= gap.
+#
+#    A. No defence cracks          osei -3  kapoor -2  lindqvist -3  hale -2  ashdown -3
+#       -> 0 acquit, 5 convict: GUILTY. Still GUILTY at D = +1; D = +2 gives
+#          kapoor and hale 1 each -> 2-3 HUNG. Weak spot: if the prosecutor
+#          never cracks Iris's lie, D = +1 alone acquits (4 of 5 nets at +1).
+#    B. Two cracks (one per witness)
+#                                  osei +1  kapoor +1  lindqvist +1  hale  0  ashdown -1
+#       -> osei, kapoor acquit; 3 convict: HUNG. Both Arden cracks: same, HUNG.
+#          Both Renn cracks: kapoor nets 0 -> 1-4 GUILTY. So two cracks lands
+#          on hung or narrow guilty.
+#    C. All four cracks, no bluffing
+#                                  osei +5  kapoor +4  lindqvist +5  hale +2  ashdown +1
+#       -> 5 acquit (margins 4, 3, 3, 1, 0): NOT GUILTY, after Iris's crack.
+#       If every crack scores only +1: osei +1, kapoor +2, lindqvist +1 (fails),
+#       hale +2, ashdown +1 -> 4 acquit, still NOT GUILTY.
+#       Bluffing: each flagged invented claim costs lindqvist and hale 1.
+#       Two flagged claims drop hale to 0 (fails) -> 4 acquit, still NOT GUILTY;
+#       three or more puts the result at risk.
+#
+#  To make the case harder, widen the gaps (raise acquitAt); to make it more
+#  forgiving of a missed crack, lower lindqvist's gap to 1.
+#
+#  ── Voices ──────────────────────────────────────────────────────────────────
+#
+#  Each speaker may name a Deepgram Aura voice (`voice:`); jurors never speak and
+#  the player is never voiced. Aura-2 has only two British voices (draco, pandora),
+#  so the older Aura-1 catalogue supplies the mature British judge (athena), the
+#  British clerk (helios) and the Irish guard (angus). Every voice must be
+#  distinct. Leave one out and the server picks an unused fallback.
+#
+# ════════════════════════════════════════════════════════════════════════════
+
+id: calloway
+title: Commonwealth of Aldermere v. Iris Calloway
+charge: >-
+  Theft of the Halvorsen sapphire, and assault causing bodily harm to Tobias
+  Renn, at the Halvorsen Museum on the night of 14 March.
+playerSide: defence
+defendantName: Iris Calloway
+
+# ─── Public brief ───────────────────────────────────────────────────────────
+# Seen by the player and every AI role. Agreed facts only.
+publicBrief: |
+  The Halvorsen Museum stands on Halvorsen Square in the old town of Aldermere.
+
+  Ground floor: the front entrance with the guard desk, and beside it the staff entrance; the west wing, which houses the conservation studio; the east wing, with the plant room, service door SD-3 to the loading yard, and the garage link door through to Halvorsen Square Garage.
+  Upper floor: the galleries, the director's office and, off the upper east corridor, the strongroom.
+  The east stairwell joins the ground-floor east corridor to the upper east corridor. A north service stair also links the two floors.
+
+  Since 10 March the Halvorsen sapphire has been kept in the strongroom while the museum's conservator, Iris Calloway, remounts its setting.
+
+  Agreed facts:
+  - At 11:44 pm on 14 March the night guard, Tobias Renn, phoned police from his mobile to report that he had been pushed down the east stairwell. Police arrived at 11:56 pm and he let them in at the front entrance.
+  - Mr Renn had a sprained right wrist and bruised ribs. Paramedics treated him at the scene.
+  - Police found the strongroom door closed and locked, and kept an officer in the building overnight.
+  - At 7:41 am on 15 March the director, Celeste Arden, opened the strongroom in front of police. The sapphire's case was empty. The sapphire has not been found.
+  - Police interviewed Ms Calloway at her flat at 8:30 am on 15 March (Exhibit E1) and arrested her that afternoon.
+  - Ms Calloway pleads not guilty to both charges.
+
+# ─── Rules of court ─────────────────────────────────────────────────────────
+rules:
+  objections:
+    - type: relevance
+      name: Relevance
+      rule: >-
+        Questions must bear on the events of 14 and 15 March, the people
+        involved, or a witness's reliability. Questions about unrelated matters
+        may be stopped.
+      example: "Q: What do you think of the museum's new café?"
+    - type: hearsay
+      name: Hearsay
+      rule: >-
+        A witness may not repeat what someone else told them in order to prove
+        it true. A witness may describe what they saw, heard and did, and may
+        repeat what the defendant said to them; exhibits are not hearsay.
+      example: "Q: What did the other guards tell you about Ms Calloway?"
+    - type: leading
+      name: Leading question
+      rule: >-
+        On direct examination a lawyer may not ask a question that suggests its
+        own answer. On cross-examination leading questions are allowed.
+      example: "On direct: You saw the defendant's face clearly, didn't you?"
+    - type: speculation
+      name: Speculation
+      rule: >-
+        A witness may not be asked to guess about things they did not see or
+        cannot know, including what another person was thinking.
+      example: "Q: Why do you suppose the director raised the insurance?"
+    - type: assumes_facts
+      name: Assumes facts not in evidence
+      rule: >-
+        A question may not take for granted a fact that is not in the record or
+        the agreed facts.
+      example: "Q: After you took the sapphire, where did you hide it?"
+    - type: badgering
+      name: Badgering the witness
+      rule: >-
+        A lawyer may not argue with, insult or harass a witness, or keep
+        repeating a question that has already been answered.
+      example: "Q: Come on, you're lying, aren't you? Aren't you?"
+  evidence:
+    - >-
+      Only the exhibits in this case file exist. No one may refer to any other
+      document, recording or object as though it existed.
+    - An exhibit enters the record when a lawyer presents it to a witness during questioning.
+    - Opening statements may preview any exhibit in the case file.
+    - >-
+      Closing statements may rely only on exhibits that have entered the record,
+      testimony given in court, and the agreed facts.
+    - >-
+      A lawyer may not assert as fact anything that is not in the record or the
+      agreed facts. A witness may be asked about it; a lawyer may not claim it.
+
+# ─── Hidden truth ───────────────────────────────────────────────────────────
+# Never shown to players, actors or jurors. Every exhibit and statement below
+# is written to agree with this. knownBy lists witness ids.
+timeline:
+  - time: "21 Feb"
+    event: >-
+      Insurance on the sapphire raised from 2.4 to 6.5 million crowns at Arden's
+      request, after a revaluation on 12 February. She is already planning to
+      fake a theft and keep the stone.
+    knownBy: [arden]
+  - time: "02 Mar"
+    event: Battery pack for the east stairwell emergency lights fails its test. Replacement ordered.
+    knownBy: []
+  - time: "03 Mar"
+    event: Security supervisor Gareth Lyle's strongroom code (slot 06) suspended pending a re-key.
+    knownBy: [arden]
+  - time: "09 Mar"
+    event: >-
+      The Harbour at Vell comes to the conservation studio for re-framing. Iris
+      writes to Arden that it may not be the painting bought in 2011.
+    knownBy: [calloway, arden]
+  - time: "10 Mar"
+    event: >-
+      The sapphire moves to the strongroom for its remount. Arden emails Iris her
+      slot 04 code and forbids after-hours work and any handling of the Vell (E4).
+    knownBy: [calloway, arden]
+  - time: "14 Mar 08:39"
+    event: Arden drives into Halvorsen Square Garage (director's bay) and badges in at the garage link at 08:44.
+    knownBy: [arden]
+  - time: "14 Mar 09:12-16:51"
+    event: >-
+      Iris works on the sapphire in the strongroom (09:12-12:30, 13:35-16:51).
+      At 16:51 she puts it back in its case and closes the door.
+    knownBy: [calloway]
+  - time: "14 Mar 15:45"
+    event: >-
+      Renn drops his glasses at home and steps on them. At 16:30 the eye clinic
+      orders a replacement pair, ready 17 March. He has no spare and goes to
+      work without glasses.
+    knownBy: [renn]
+  - time: "14 Mar 17:48"
+    event: Renn badges in for his night shift. Iris leaves at 18:10 and cycles home.
+    knownBy: [renn, calloway]
+  - time: "14 Mar 20:55"
+    event: >-
+      Arden says goodnight to Renn at the guard desk and walks off down the east
+      corridor towards the garage link, then goes back up the north service
+      stair to her office and stays there.
+    knownBy: [arden, renn]
+  - time: "14 Mar 21:42"
+    event: >-
+      Iris cycles back and badges in at the staff entrance with her camera bag
+      and a UV torch. She tells Renn she will be an hour or so in the studio and
+      asks him not to mention it to Arden.
+    knownBy: [calloway, renn]
+  - time: "14 Mar 21:47-23:50"
+    event: >-
+      Iris is in the conservation studio (west wing) the whole time, photographing
+      The Harbour at Vell under raking and ultraviolet light and comparing it with
+      the 2011 acquisition photographs. She never goes to the east wing.
+    knownBy: [calloway]
+  - time: "14 Mar 23:00"
+    event: Renn acknowledges the hourly check prompt at the guard desk console.
+    knownBy: [renn]
+  - time: "14 Mar 23:12"
+    event: >-
+      Renn goes out through service door SD-3 into the loading yard to smoke,
+      wedging the door open. The held-open alert sounds at the empty desk.
+    knownBy: [renn]
+  - time: "14 Mar 23:24"
+    event: >-
+      Arden, in the plant room, switches off breaker B to blind cameras 7 and 8.
+      This also darkens the east stairwell. She climbs it by a small torch.
+    knownBy: [arden]
+  - time: "14 Mar 23:27"
+    event: >-
+      Arden opens the strongroom with her own master code (slot 01), believing
+      the controller cannot log without mains power. It runs on battery and logs
+      her. She takes the sapphire and closes the door at 23:31, then waits in
+      her office.
+    knownBy: [arden]
+  - time: "14 Mar 23:37"
+    event: >-
+      Renn comes back in through SD-3 at the foot of the east stairwell. The
+      stairwell is pitch dark. He hears footsteps above and starts up.
+    knownBy: [renn]
+  - time: "14 Mar 23:40"
+    event: >-
+      Arden, coming down with her torch switched off, meets Renn on the upper
+      flight and shoves him aside. He falls to the half-landing. She hurries past
+      him down to the ground floor. Neither sees the other's face.
+    knownBy: [arden, renn]
+  - time: "14 Mar 23:44"
+    event: >-
+      Renn phones police from his mobile and stays sitting on the half-landing.
+      Knowing Iris is in the building, he assumes it was her.
+    knownBy: [renn]
+  - time: "14 Mar 23:51"
+    event: >-
+      Arden, who has waited in the plant room, resets breaker B so the cut looks
+      like a trip. The stairwell lights come back on.
+    knownBy: [arden, renn]
+  - time: "14 Mar 23:52"
+    event: >-
+      Iris leaves by the staff entrance (camera 2), passing the empty guard desk,
+      and cycles home. She has seen no one and heard nothing.
+    knownBy: [calloway]
+  - time: "14 Mar 23:53"
+    event: Arden goes out through the garage link (exit not logged) and sits in her car with the sapphire.
+    knownBy: [arden]
+  - time: "14 Mar 23:57"
+    event: >-
+      Renn limps to the desk, cancels night mode and lets police in. He tells
+      them he saw Iris Calloway's face clearly on the stairs.
+    knownBy: [renn]
+  - time: "15 Mar 00:07"
+    event: >-
+      Arden drives out of the garage. Police phone her at 00:25; she says she is
+      at home and will come in first thing.
+    knownBy: [arden]
+  - time: "15 Mar 07:41"
+    event: Arden opens the strongroom with police present. The case is empty.
+    knownBy: [arden]
+  - time: "15 Mar 08:30"
+    event: >-
+      Police call at Iris's flat. Frightened for her job after defying Arden's
+      written instruction, she says she was at home all evening.
+    knownBy: [calloway]
+  - time: "15 Mar afternoon"
+    event: >-
+      Police obtain the badge log and arrest Iris. Arden tells them only Iris had
+      a working strongroom code.
+    knownBy: [arden, calloway]
+
+# ─── Evidence ───────────────────────────────────────────────────────────────
+# The public case file. Breakers are mixed in with neutral and
+# prosecution-friendly documents; keep it that way when editing.
+evidence:
+  - id: E1
+    title: Statement of Iris Calloway to police
+    kind: witness statement
+    text: |
+      Aldermere Police. Statement of Iris Calloway, taken at her flat, 14 Tanner Street, 15 March, 8:30 am.
+
+      "I left work at about ten past six yesterday and cycled home. I was at home all evening on my own. I made dinner, watched a film and went to bed at about eleven. I didn't go back to the museum. I haven't been in the strongroom since I finished the remount work at about ten to five yesterday, and the sapphire was in its case when I closed the door. I don't know anything about it going missing. Tobias is a friend. I'm sorry he's hurt."
+
+      Signed: I. Calloway. Officer: Sgt P. Holm.
+
+  - id: E2
+    title: CCTV still, camera 2
+    kind: photo description
+    text: |
+      Still from camera 2 (staff entrance, exterior), 14 March, 23:52:14. Described by Aldermere Police; the image is too dark to reproduce.
+
+      Night image, heavy grain, rain on the lens. One person on the staff entrance step, walking away from the door towards the street and the bicycle racks. Hood up. Pale, knee-length raincoat. A bag on a long strap worn across the body. Face not visible.
+
+      Officer's note: "Height and build hard to judge. Consistent with a woman of medium build; consistent with the defendant."
+
+      No one else is in frame between 23:30 and 00:10.
+
+  - id: E3
+    title: Staff badge log
+    kind: access log
+    text: |
+      Halvorsen Museum, staff badge readers, 14 March 07:00 to 15 March 09:00. Exported for Aldermere Police, 15 March.
+      Readers: staff entrance (in and out); garage link door (in only, push-bar exit); conservation studio (in only).
+
+      14 Mar 08:02  Staff entrance IN    D. Pryce (day guard)
+      14 Mar 08:44  Garage link IN       C. Arden
+      14 Mar 08:51  Staff entrance IN    J. Okoro (curator)
+      14 Mar 08:57  Staff entrance IN    I. Calloway
+      14 Mar 09:05  Conservation studio  I. Calloway
+      14 Mar 13:20  Conservation studio  I. Calloway
+      14 Mar 17:36  Staff entrance OUT   J. Okoro
+      14 Mar 17:48  Staff entrance IN    T. Renn (night guard)
+      14 Mar 18:02  Staff entrance OUT   D. Pryce
+      14 Mar 18:10  Staff entrance OUT   I. Calloway
+      14 Mar 21:42  Staff entrance IN    I. Calloway
+      14 Mar 21:47  Conservation studio  I. Calloway
+      14 Mar 23:52  Staff entrance OUT   I. Calloway
+      15 Mar 01:58  Staff entrance OUT   T. Renn
+      15 Mar 07:24  Garage link IN       C. Arden
+
+  - id: E4
+    title: Email from the director to Iris Calloway, 10 March
+    kind: email
+    text: |
+      From: Celeste Arden (Director)
+      To: Iris Calloway (Conservation)
+      Date: 10 March, 09:20
+      Subject: Strongroom access / Vell
+
+      Iris,
+
+      Your strongroom code is set up on slot 04 for the sapphire remount and runs until 21 March. Don't write it down and don't share it. With Gareth's slot suspended until the re-key, yours is the only conservation access. Strongroom work in working hours only, please.
+
+      On The Harbour at Vell: I have read your note. The provenance is clean, and the painting is not to be handled or photographed outside the agreed re-framing schedule. No after-hours work in the studio. I'd like this to be the end of it.
+
+      Celeste
+
+  - id: E5
+    title: Strongroom door controller log
+    kind: access log
+    text: |
+      Halvorsen Museum, strongroom door controller, event export 14-15 March. Exported 15 March 10:05 for Aldermere Police.
+
+      Code slots: 01 DIR (master) | 04 CONS (issued 10 Mar, expires 21 Mar) | 06 SEC SUP, G. Lyle (suspended 03 Mar)
+
+      14 Mar 09:12  Code accepted, slot 04. Door open.
+      14 Mar 12:30  Door closed and locked.
+      14 Mar 13:35  Code accepted, slot 04. Door open.
+      14 Mar 16:51  Door closed and locked.
+      14 Mar 23:27  Code accepted, slot 01. Door open. [B]
+      14 Mar 23:31  Door closed and locked. [B]
+      15 Mar 07:41  Code accepted, slot 01. Door open.
+      15 Mar 09:58  Door closed and locked.
+
+      [B] Controller running on its backup battery (mains supply absent).
+
+  - id: E6
+    title: Facilities maintenance log
+    kind: maintenance log
+    text: |
+      Halvorsen Museum, facilities log (building engineer R. Mbeki). Entries marked AUTO are written by the building management system.
+
+      02 Mar        East stairwell emergency lights failed monthly test: battery pack dead. Replacement ordered. Until fitted, stairwell lit from mains (circuit B) only. RM
+      07 Mar        Upper west gallery humidifier serviced, filters changed. RM
+      11 Mar        Conservation studio UV lamp tube replaced. RM
+      14 Mar 23:24  AUTO  Circuit B supply lost. Circuit B feeds: east stairwell lighting; upper east corridor lighting; cameras 7 and 8 (upper east corridor, east stairwell).
+      14 Mar 23:51  AUTO  Circuit B supply restored. Breaker reset by hand at the plant room panel.
+      15 Mar        Circuit B tested, no fault found, cause of trip not identified. Emergency light battery still awaited. RM
+
+  - id: E7
+    title: Intruder alarm panel, door events
+    kind: alarm log
+    text: |
+      Halvorsen Museum, intruder alarm panel: door events and console prompts, 14 March 18:00 to 15 March 02:00.
+      Monitored doors: front entrance; staff entrance; service doors SD-1 (west yard), SD-2 (kitchen), SD-3 (loading yard, foot of east stairwell). Alerts sound at the guard desk console until acknowledged there.
+
+      18:02  Staff entrance opened (badge)
+      18:10  Staff entrance opened (badge)
+      19:30  Night mode set at console (T. Renn)
+      21:42  Staff entrance opened (badge)
+      22:00  Hourly check prompt, acknowledged at console (T. Renn)
+      23:00  Hourly check prompt, acknowledged at console (T. Renn)
+      23:12  SD-3 opened
+      23:13  SD-3 HELD OPEN alert. Not acknowledged.
+      23:37  SD-3 closed. Alert cleared automatically.
+      23:52  Staff entrance opened (badge)
+      23:57  Night mode cancelled at console (T. Renn). Front entrance opened.
+      00:00  Hourly check prompt, acknowledged at console (T. Renn)
+      01:58  Staff entrance opened (badge)
+
+  - id: E8
+    title: Aldermere Eye Clinic visit record
+    kind: medical record
+    text: |
+      Aldermere Eye Clinic, visit record.
+
+      Patient: Tobias Renn
+      Date: 14 March, 16:30 (walk-in)
+      Reason for visit: spectacles broken at home earlier this afternoon (dropped, then stepped on). Left lens shattered, frame snapped at the bridge. Not repairable.
+      Unaided vision: distance 6/60 in both eyes (top letter of the chart only). Near vision normal.
+      Prescription: unchanged, -5.00 both eyes. Patient has no spare pair.
+      Plan: replacement spectacles ordered, ready for collection 17 March. Advised not to drive until then.
+      Collected: 17 March, 11:15.
+      Optometrist: H. Ferrand
+
+      Released to Aldermere Police with the patient's consent, 20 March.
+
+  - id: E9
+    title: Insurance endorsement, policy HM-2231
+    kind: insurance document
+    text: |
+      Corran & Vey Underwriters
+      Endorsement 7 to policy HM-2231 (Halvorsen Museum, fine art and collections)
+
+      Effective date: 21 February
+      Item 14: the Halvorsen sapphire.
+      Change: agreed value increased from 2,400,000 crowns to 6,500,000 crowns, following a revaluation by Greaves & Hart dated 12 February.
+      Cover: theft, damage and loss, on and off display, including while in the strongroom.
+      Requested by: Celeste Arden, Director, on behalf of the policyholder.
+      Premium: adjusted from the effective date. All other terms unchanged.
+
+  - id: E10
+    title: Halvorsen Square Garage permit record
+    kind: parking record
+    text: |
+      Halvorsen Square Garage, permit movement record. Copy supplied to Aldermere Police on request, 18 March.
+
+      Permit: 0112
+      Holder: Halvorsen Museum, director's bay (level -1, bay 4)
+      Vehicle: grey estate, registration on file
+
+      14/03  08:39  Entry, lane 1
+      15/03  00:07  Exit, lane 2
+      15/03  07:18  Entry, lane 1
+      15/03  19:42  Exit, lane 2
+
+      Charge: nil (annual staff permit). Times are taken from the barrier clock, which is checked weekly.
+
+# ─── Witnesses ──────────────────────────────────────────────────────────────
+# Order matters: two prosecution witnesses, then the defendant.
+# role and publicStatement are public; everything else is private to the actor.
+witnesses:
+
+  # ── Witness 1: Tobias Renn ──
+  - id: renn
+    name: Tobias Renn
+    role: Night security guard, Halvorsen Museum
+    calledBy: prosecution
+    # Irish male, warm and plain: a decent working man, not a polished one.
+    voice: aura-angus-en
+    publicStatement: |
+      Statement to Aldermere Police, 15 March, 12:40 am.
+
+      "I'm the night guard. I was at the desk all evening. Ms Arden said goodnight at about five to nine and went off towards the garage. Iris Calloway came in at about twenty to ten and said she'd be in the studio for an hour or so. At about twenty to twelve I heard a bang from the east side, so I went up the east stairwell to check. Iris was at the top of the stairs, under the landing light. I saw her face clearly. It was her. She came down at me and shoved me with both hands, and I fell back down to the half-landing. She went on past me down the stairs. I rang you at 11:44."
+    persona: >-
+      Tobias Renn, 58, eleven years on nights at the Halvorsen. Plain-spoken,
+      polite, a little slow and careful; calls the judge "Your Honour" and
+      counsel "sir" or "ma'am". A decent man protecting his job, not a malicious
+      one. He likes Iris and is uncomfortable accusing her, which comes out as
+      stiffness rather than hostility. Under pressure he repeats "I know what I
+      saw" and falls back on how fast it all happened. If called a liar he gets
+      flustered and a touch indignant, then apologetic. He does not embroider
+      beyond his account. Once a lie breaks he deflates and tells it straight,
+      ashamed.
+    knows:
+      - He has worked nights at the Halvorsen for eleven years. He is alone on shift from 6 pm to 6 am, based at the guard desk by the front entrance.
+      - He badged in at 5:48 pm on 14 March and set the building to night mode at 7:30 pm.
+      - At about 8:55 pm Ms Arden said goodnight at the desk and walked off down the east corridor towards the garage link. He did not see her again that night.
+      - >-
+        At about 9:42 pm Iris came in by the staff entrance in her pale raincoat,
+        carrying her camera bag. She said she would be an hour or so in the
+        conservation studio and asked him not to mention it to Ms Arden. He
+        said he wouldn't.
+      - >-
+        He was pushed on the upper flight of the east stairwell at about 11:40
+        pm and fell back to the half-landing, hurting his right wrist and ribs.
+        The person went on down past him towards the ground floor.
+      - He phoned police from his mobile at 11:44 pm, waited on the stairs, then went to the desk and let police in at the front entrance at 11:57 pm.
+      - He did not see Iris leave. He did not see anyone else in the building that night.
+      - He has no strongroom code and has never been in the strongroom alone.
+      - He likes Iris; she has always been kind to him and brings him coffee on late nights.
+    lies:
+      - id: renn_saw_face
+        label: Renn could not have seen the face on the stairs
+        topic: >-
+          Whether he saw and recognised the person on the east stairwell at about
+          11:40 pm: the lighting, his eyesight, his glasses, what he could make out.
+        coverStory: >-
+          The stairwell lights were on as normal. I looked up and saw Iris
+          Calloway at the top of the upper flight, under the landing light, about
+          half a flight above me, five metres or so. I saw her face clearly, and
+          her pale raincoat, the one she came in with. I had my glasses on, like
+          always. She came down at me fast and shoved me in the chest with both
+          hands, and I went backwards down to the half-landing. There is no doubt
+          in my mind it was her.
+        truth: >-
+          The east stairwell was pitch dark. Circuit B was off from 11:24 to 11:51
+          pm and the emergency lights had a dead battery; the lights came back on
+          while he was sitting on the half-landing. His glasses had broken that
+          afternoon and he had no spare, so even in good light he could not have
+          recognised a face at that distance. He saw only a dark shape coming down
+          at him, then he was shoved. He named Iris because she was the only
+          person he knew was in the building. (How he came to be on the stairs
+          belongs to his other lie; do not volunteer it.)
+        concession: >-
+          He admits the stairwell was dark and that he was not wearing glasses,
+          that he did not see a face or a coat, only a shape, and that he assumed
+          it was Iris because she was the only person he knew was inside. He is
+          ashamed and says so. He still insists someone pushed him on purpose. He
+          will not name anyone else; he does not know who it was.
+        breakers:
+          - exhibitIds: [E6]
+            mustConfront: >-
+              That the maintenance log shows circuit B, which lights the east
+              stairwell, was off from 11:24 to 11:51 pm, with the stairwell's
+              emergency lights out of action, so the stairwell was dark when he
+              says he saw her face under the landing light.
+          - exhibitIds: [E8]
+            mustConfront: >-
+              That the eye clinic record shows his glasses were broken on the
+              afternoon of 14 March and not replaced until 17 March, and that
+              without them his distance vision is very poor, so he could not have
+              recognised a face half a flight away.
+      - id: renn_at_post
+        label: Renn had left his post and propped open a service door
+        topic: >-
+          Where he was between about 11:00 and 11:40 pm, how he came to be on
+          the east stairwell, and whether he left the guard desk or opened any door.
+        coverStory: >-
+          I was at the guard desk all evening. At about 11:38 I heard a bang from
+          the east side, upstairs, so I went straight down the ground-floor east
+          corridor to the foot of the east stairwell and started up. I never left
+          my post before that, never went outside, never opened any door. I don't
+          smoke on shift.
+        truth: >-
+          At 11:12 pm he went out through service door SD-3, at the foot of the
+          east stairwell, into the loading yard for a cigarette, and wedged the
+          door open so he would not have to walk round. He stayed out until 11:37.
+          The held-open alert sounded at the empty guard desk the whole time. He
+          came back in through SD-3, heard footsteps above and started up. Leaving
+          the desk and propping an alarmed door are sacking offences; that is why
+          he lied. (What he could see on the stairs belongs to his other lie; do
+          not volunteer it.)
+        concession: >-
+          He admits he wedged SD-3 open and was out in the loading yard smoking
+          from about 11:12 to 11:37, that nobody was at the desk, and that he came
+          back in through SD-3 and went up the stairs from there; there was no
+          bang heard from the desk. He apologises and says he will probably lose
+          his job. He did not see anyone go in or out of the door while he was
+          outside, but admits he had his back to it some of the time.
+        breakers:
+          - exhibitIds: [E7]
+            mustConfront: >-
+              That the alarm panel records service door SD-3, at the foot of the
+              east stairwell, held open from 11:12 to 11:37 pm, with the held-open
+              alert at his own desk never acknowledged, so he was not at his post.
+
+  # ── Witness 2: Celeste Arden ──
+  - id: arden
+    name: Celeste Arden
+    role: Director, Halvorsen Museum
+    calledBy: prosecution
+    # British female, smooth and composed: the polished institutional voice.
+    voice: aura-2-pandora-en
+    publicStatement: |
+      Statement to Aldermere Police, 15 March, 2:15 pm.
+
+      "I left the museum at about nine on the evening of 14 March, said goodnight to the night guard, and drove home. I was at home alone for the rest of the evening. Since 10 March the sapphire has been kept in the strongroom while its setting is remounted by our conservator, Iris Calloway, who was issued a strongroom code for the work. The security supervisor's code has been suspended since 3 March pending a re-key. My own master code is for emergencies and was not used that night. Ms Calloway was therefore the only person able to open the strongroom. She had been instructed in writing not to work after hours."
+    persona: >-
+      Celeste Arden, 52, director for seven years. Polished, composed and
+      articulate; speaks in complete, careful sentences and the institutional
+      "we". Courteous to the bench, faintly condescending to defence counsel.
+      Answers exactly the question asked and never volunteers. Corrects loaded
+      phrasing ("I wouldn't call it a dispute"). Dodges by retreating to
+      procedure ("that would be in the records", "I'd have to check") and by
+      steering back to Ms Calloway's conduct. Never loses her temper. When a
+      document pins her she pauses, then concedes precisely what the paper says
+      and nothing beyond it. She never admits taking the sapphire or pushing
+      anyone, and meets any such suggestion with cold offence.
+    knows:
+      - She has been director for seven years. She lives alone on Larch Row, about twenty minutes' drive away.
+      - >-
+        The sapphire has been in the strongroom since 10 March for the remount.
+        She issued Iris strongroom code slot 04 by email that day (E4).
+      - >-
+        The strongroom keypad has three code slots: 01 is her director's master,
+        04 is the conservation slot issued to Iris, and 06 belongs to security
+        supervisor Gareth Lyle and has been suspended since 3 March pending a
+        re-key. She has never written the master code down or told it to anyone.
+      - >-
+        She asked the insurers to raise the sapphire's agreed value from 2.4 to
+        6.5 million crowns, effective 21 February, after a revaluation by Greaves
+        & Hart on 12 February (E9). She calls it ordinary prudence.
+      - >-
+        On 9 March Iris sent her a note claiming The Harbour at Vell might not be
+        the painting the museum bought in 2011. She considers it a hunch, says
+        the provenance is clean, and told Iris in writing to drop it and do no
+        after-hours work (E4).
+      - She drove in at about 8:40 am on 14 March and parks in the director's bay, level -1, Halvorsen Square Garage, reaching the museum by the garage link.
+      - She said goodnight to Tobias Renn at the guard desk at about 8:55 pm.
+      - At 7:41 am on 15 March she opened the strongroom with her master code in front of police and found the sapphire's case empty.
+      - She regards Iris as talented but headstrong.
+    lies:
+      - id: arden_left_nine
+        label: Arden did not leave at nine
+        topic: >-
+          When and how she left the museum on 14 March, and where she was for the
+          rest of that night.
+        coverStory: >-
+          I said goodnight to Tobias at the desk at about five to nine, walked
+          down the east corridor and through the garage link to my car, and drove
+          home to Larch Row; I was home by about twenty past nine. I spent the
+          evening there alone and was in bed before midnight. I knew nothing until
+          the police telephoned me after midnight.
+        truth: >-
+          After saying goodnight to Renn at 8:55 pm she did not leave. She went
+          back up the north service stair to her office on the upper floor and
+          stayed in the building until about 11:53 pm, then went out through the
+          garage link. Her car left the garage at 00:07 on 15 March.
+        concession: >-
+          She admits she did not leave at nine: she went back up to her office to
+          work on papers (she says the insurance schedule and the budget), lost
+          track of time, and drove out of the garage just after midnight. She says
+          she came down by the north service stair and left through the garage
+          link, so she did not pass the guard desk, and that she saw and heard
+          nothing unusual and did not see Ms Calloway. She calls her earlier
+          account "an imprecision" she regrets, given because she did not want to
+          be drawn into a staff matter. She does not admit going near the
+          strongroom or the east stairwell.
+        breakers:
+          - exhibitIds: [E10]
+            mustConfront: >-
+              That the garage record shows the car on her permit (the director's
+              bay) leaving Halvorsen Square Garage at 00:07 on 15 March, three
+              hours after she says she drove home.
+      - id: arden_only_code
+        label: The director's master code opened the strongroom
+        topic: >-
+          Who could open the strongroom on the night of 14 March, and whether any
+          code other than Iris Calloway's was used.
+        coverStory: >-
+          There are three code slots. Gareth Lyle's has been suspended since 3
+          March. My master code is for emergencies only; I have told it to no one
+          and it was not used that night. The next time it was used was when I
+          opened the strongroom for the police at 7:41 the next morning. The only
+          working code in play that night was Iris's. Only Iris could have opened
+          that door.
+        truth: >-
+          The strongroom was opened at 11:27 pm with slot 01, her own master code,
+          which no one else knows. Iris's slot 04 was last used at 1:35 pm, and
+          the door had been closed since 4:51 pm.
+        concession: >-
+          She concedes that slot 01 is her master code, that she has given it to
+          no one, and that the log shows slot 01, not Iris's code, opened the
+          strongroom at 11:27 pm. She will not explain the entry. If she is still
+          maintaining that she left at nine, she says she can only assume her code
+          was somehow compromised. If she has already admitted staying late, she
+          says she will not speculate about a log entry. She does not admit
+          opening the strongroom herself.
+        breakers:
+          - exhibitIds: [E5]
+            mustConfront: >-
+              That the strongroom log shows the door opened at 11:27 pm with code
+              slot 01, the director's master code, not Iris Calloway's slot 04.
+
+  # ── Witness 3: Iris Calloway, the defendant ──
+  - id: calloway
+    name: Iris Calloway
+    role: Conservator, Halvorsen Museum; the defendant
+    calledBy: defence
+    # Australian female, expressive and sincere: earnest, a little exposed.
+    voice: aura-2-theia-en
+    publicStatement: >-
+      Ms Calloway pleads not guilty to both charges. She denies taking the
+      sapphire and denies being on the east stairwell. Her account is her
+      statement to police of 15 March (Exhibit E1).
+    persona: >-
+      Iris Calloway, 34, conservator for nine years. Earnest, precise, a little
+      awkward; talks fast when nervous and slips into technical words about
+      paint, varnish and light. Fundamentally honest and bad at lying: while
+      holding her police account she gives short answers, avoids detail and
+      repeats "I've told you where I was". Frightened rather than defiant. Once
+      the lie breaks she is visibly relieved and tells the whole thing,
+      embarrassed but steady, and turns firm about what she did not do. She never
+      accuses the director outright; she says only that she does not know who
+      took the stone.
+    knows:
+      - She has been the Halvorsen's conservator for nine years. She does not drive and has no car; she cycles everywhere.
+      - >-
+        She has been remounting the sapphire's setting in the strongroom since 10
+        March using code slot 04 (E4). On 14 March she worked there from 9:12 to
+        12:30 and from 1:35 to 4:51 pm. At 4:51 she put the sapphire back in its
+        case and closed the door. It was there then.
+      - She left work at about 6:10 pm on 14 March and cycled home to her flat on Tanner Street.
+      - She has never been told the director's master code or Gareth Lyle's code.
+      - >-
+        On 9 March she wrote to the director that The Harbour at Vell, in the
+        studio for re-framing, may not be the painting bought in 2011. The
+        director refused to let her examine it and told her to drop it (E4). She
+        still believes she is right.
+      - She did not go into the east wing, the east stairwell or the strongroom after 4:51 pm on 14 March. She did not take the sapphire and did not push Tobias.
+      - She owns a pale knee-length raincoat and a camera bag she wears across her body.
+      - She likes Tobias Renn; he has always been kind to her.
+      - Police came to her flat at 8:30 am on 15 March and she gave the statement in E1.
+    lies:
+      - id: calloway_at_home
+        label: Iris was at the museum that night, not at home
+        topic: Where she was on the evening and night of 14 March after leaving work at 6:10 pm.
+        coverStory: >-
+          I stand by what I told the police. I cycled home at ten past six, made
+          dinner, watched a film and went to bed at about eleven. I was on my own.
+          I didn't go back to the museum. If Tobias says he saw me come in, he's
+          muddling it with another evening; I have worked late before.
+        truth: >-
+          She cycled back and badged in at the staff entrance at 9:42 pm with her
+          camera and a UV torch, told Renn she would be an hour or so in the
+          studio and asked him not to tell the director. From 9:47 pm she was in
+          the conservation studio photographing The Harbour at Vell under raking
+          and ultraviolet light and comparing it with the 2011 acquisition
+          photographs, and lost track of time. She never left the west wing. She
+          left by the staff entrance at 11:52 pm, saw nobody at the desk, and
+          cycled home. When police came the next morning she panicked: she had
+          defied a written instruction and feared losing her job, so she said she
+          had been at home.
+        concession: >-
+          She admits all of it, plainly and with embarrassment: she came back at
+          9:42, was in the studio the whole time, left at 11:52, and lied to the
+          police out of fear for her job. She apologises to the court and to
+          Tobias. She insists firmly that she never went to the east wing, the
+          stairwell or the strongroom that night, did not take the sapphire and
+          did not push anyone, and that the figure on camera 2 is her leaving with
+          her camera bag.
+        breakers:
+          - exhibitIds: [E3]
+            mustConfront: >-
+              That the staff badge log records her badge entering the staff
+              entrance at 9:42 pm, the conservation studio at 9:47 pm, and leaving
+              at 11:52 pm on 14 March, so she was not at home.
+
+# ─── Prosecution ────────────────────────────────────────────────────────────
+# The prosecutor believes the case and does not know the hidden truth.
+# Opening and closing points rely only on the public file.
+prosecution:
+  name: Lionel Marsh
+  # British male baritone, warm and trustworthy: measured, never theatrical.
+  voice: aura-2-draco-en
+  persona: >-
+    Lionel Marsh, advocate for the Commonwealth. Measured, courteous and quietly
+    relentless. Speaks plainly to the jury, avoids theatrics, and on cross asks
+    short questions that build by small concessions. He genuinely believes the
+    defendant is guilty: the badge log, her lie to police and the guard's
+    identification make, to him, a clean case. Respectful to the bench. If one
+    of his witnesses is damaged he does not pretend otherwise, but argues that
+    the rest still stands. He never invents evidence.
+  theory: >-
+    Iris Calloway, who held a strongroom code for the remount and had been told
+    in writing to stop meddling and stay out after hours, came back to the
+    museum at 9:42 pm. She took the sapphire from the strongroom, and at about
+    11:40 pm, coming down the east stairwell, she met the night guard, who
+    recognised her. She pushed him down the stairs and left at 11:52 pm with a
+    bag across her body. The next morning she told police she had been at home
+    all evening.
+  openingPoints:
+    - The sapphire was in its case in the strongroom when the defendant locked up at about ten to five (E1). The next morning the case was empty.
+    - The defendant held a strongroom code for the remount, and had been told in writing to stay out of the building after hours (E4).
+    - The badge log puts her back inside at 9:42 pm and out again at 11:52 pm (E3).
+    - Night guard Tobias Renn will tell you he saw her face on the east stairwell at about 11:40 pm, and that she pushed him down it.
+    - Camera 2 shows a figure in a pale raincoat leaving at 11:52 pm with a bag across the body (E2).
+    - The next morning she told police she had been at home all evening (E1). The evidence will show that was a lie.
+  closingPoints:
+    - The badge log (E3) puts the defendant inside the museum from 9:42 to 11:52 pm, the hours in which the sapphire went missing and Mr Renn was pushed.
+    - She told police she was at home (E1) and held to it on oath until the badge log was put to her. An innocent person does not need that lie.
+    - She had the access - a strongroom code and weeks of work on the stone (E4) - and she had been overruled and told to stop (E4).
+    - Camera 2 (E2) shows a pale raincoat and a bag across the body leaving minutes after Mr Renn was pushed.
+    - Whatever the defence suggests about other people, none of it explains why the defendant was in the building that night and lied about it.
+  # witnessId -> ordered steps. Direct for renn and arden, cross for calloway.
+  plan:
+    renn:
+      - topic: >-
+          His job and the evening: eleven years on nights, alone from 6 pm; Ms
+          Arden said goodnight at about 8:55 pm and headed for the garage link;
+          the defendant came in at 9:42 pm, said she would be in the studio an
+          hour or so, and asked him not to tell the director.
+        exhibitIds: [E3]
+      - topic: >-
+          Where he was through the evening: at the guard desk, at his post, until
+          he heard a noise from the east side at about 11:38 pm and went to the
+          east stairwell.
+      - topic: >-
+          What he saw on the east stairwell at about 11:40 pm: the person at the
+          top of the upper flight, his identification of the defendant's face,
+          and how sure he is.
+      - topic: >-
+          The push and what followed: shoved with both hands, fell to the
+          half-landing, sprained wrist and bruised ribs, the person went on down
+          past him, and his call to police at 11:44 pm.
+    arden:
+      - topic: >-
+          Her role, the sapphire's remount in the strongroom since 10 March, and
+          the strongroom code she issued to the defendant on slot 04.
+        exhibitIds: [E4]
+      - topic: >-
+          Who could open the strongroom that night: the security supervisor's
+          slot suspended, her own master code unused, so only the defendant's
+          code was live.
+      - topic: >-
+          Her own movements: said goodnight to the guard at about 8:55 pm, drove
+          home, and learned of the incident from police.
+      - topic: >-
+          The defendant's dispute over The Harbour at Vell and the written
+          instruction not to work after hours, and opening the strongroom with
+          police at 7:41 am to find the case empty.
+    calloway:
+      - topic: >-
+          Her strongroom code (slot 04) and her work on the sapphire: she knew the
+          strongroom, the case and the stone better than anyone.
+        exhibitIds: [E4]
+      - topic: >-
+          The Vell dispute: she was told in writing to drop it and not to work
+          after hours, and she resented it.
+      - topic: >-
+          Commit her to her police statement: at home all evening, never went
+          back to the museum.
+        exhibitIds: [E1]
+      - topic: >-
+          Confront her with the badge log: in at 9:42 pm, into the studio at 9:47
+          pm, out at 11:52 pm. She lied to the police.
+        exhibitIds: [E3]
+      - topic: >-
+          The camera 2 image at 11:52 pm: a pale raincoat and a bag across the
+          body. That was her, leaving with the stone.
+        exhibitIds: [E2]
+      - topic: >-
+          Put the case to her: she was in the building the night the sapphire
+          vanished, at the hour Mr Renn was pushed, and she lied about it because
+          she is guilty.
+
+# ─── Judge ──────────────────────────────────────────────────────────────────
+judge:
+  name: Judge Augusta Pell
+  # British female, mature, calm and professional: dry authority.
+  voice: aura-athena-en
+  persona: >-
+    Dry, brisk and even-handed. Rules in a sentence and names the rule. Has no
+    patience for speeches dressed up as questions, from either side. Protective
+    of witnesses, never of evasions. Allows herself the occasional flash of wit.
+
+# ─── Clerk ──────────────────────────────────────────────────────────────────
+# Code-written narration ("The court calls..."). Only the voice is set here.
+clerk:
+  # British male, clear and professional: the voice of procedure.
+  voice: aura-helios-en
+
+# ─── Jurors ─────────────────────────────────────────────────────────────────
+# persona is public; disposition is private to the jury scorer.
+# startLean / acquitAt: see the tuning table at the top of this file.
+jurors:
+  - id: osei
+    name: Margaret Osei
+    persona: Retired bookkeeper, 67. Kept the accounts for a builder's merchant for thirty years.
+    disposition: >-
+      Trusts paper over people. Moves sharply (2) whenever a document
+      contradicts what a witness says, whichever side it hurts, including when
+      the prosecution catches the defendant with a record. Unmoved by demeanour,
+      tears, or confident assertion with no document behind it. Ordinary
+      testimony barely moves her.
+    startLean: -1
+    acquitAt: 0
+  - id: kapoor
+    name: Dev Kapoor
+    persona: Delivery rider, 29. Works nights and has had his share of run-ins with management.
+    disposition: >-
+      Distrusts institutions and the people who run them: directors, insurers,
+      management. A senior official caught out moves him strongly (2); a guard
+      caught covering for himself moves him less (1), because he sees a worker
+      protecting his job. Sympathetic to an employee who lied out of fear of her
+      boss, so the defendant's lie costs her only a little with him (1). Cold to
+      appeals to the museum's reputation or the director's standing.
+    startLean: 0
+    acquitAt: 1
+  - id: lindqvist
+    name: Agnes Lindqvist
+    persona: Retired head teacher, 61. Spent thirty years working out who was telling the truth.
+    disposition: >-
+      Reads character. Watches how witnesses answer: evasions, sudden
+      "imprecisions", glib polish. Any witness caught in a lie loses her trust
+      sharply (2), the defendant included. Moved by plain remorse and candour
+      after a mistake. Honesty-minded: a lawyer asserting something not in the
+      record moves her 1 against that lawyer.
+    startLean: -2
+    acquitAt: 0
+  - id: hale
+    name: Victor Hale
+    persona: Runs a small plumbing firm, 48. Likes people who get to the point.
+    disposition: >-
+      Impatient with lawyers who overreach: speeches dressed as questions,
+      badgering, bluffing, objections that go nowhere. Rewards crisp, fair
+      questioning that lands. A cracked lie moves him only 1, because he expects
+      the other side to have an answer. Honesty-minded: an invented or
+      unsupported claim from either lawyer moves him 1 against that lawyer.
+    startLean: -1
+    acquitAt: 0
+  - id: ashdown
+    name: Bernard Ashdown
+    persona: Retired civil servant, 70. Thirty-five years at the Land Registry.
+    disposition: >-
+      Defers to authority: the police, the museum director, a guard with eleven
+      years' service. Starts inclined to believe them, and takes the defendant's
+      lie to police hard (2). Paper that forces an official to concede moves him,
+      but only 1 each time; it takes several before he changes his mind. Unmoved
+      by attacks on character or institutions with no document behind them.
+    startLean: -2
+    acquitAt: -1

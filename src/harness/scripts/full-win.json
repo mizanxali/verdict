@@ -1,0 +1,65 @@
+{
+  "name": "full-win",
+  "description": "A competent defence at the default budgets: commits each prosecution witness to their account, then confronts every lie with the exhibit that breaks it. Opening and closing rely only on the case file and the record.",
+  "caseId": "calloway",
+  "budgets": {},
+  "opening": {
+    "text": "Members of the jury, the prosecution has told you its case rests on two people: a night guard who says he saw Iris Calloway's face on a staircase, and a director who says only Ms Calloway could have opened the strongroom. I ask you to test both of them against the museum's own records. You will see the facilities log, Exhibit E6, which records what happened to the lighting in the east stairwell that night. You will see the eye clinic record, Exhibit E8, made that very afternoon. You will see the alarm panel log, Exhibit E7, which records what the service door at the foot of that stairwell was doing while Mr Renn says he was at his desk. You will see the strongroom controller log, Exhibit E5, which records which code opened the strongroom at 11:27 pm, and the garage record, Exhibit E10, which records when the director's car left. The badge log, Exhibit E3, shows that Ms Calloway came back to the museum that evening; it is the prosecution's job to prove she did more than that, and to prove it beyond reasonable doubt. Listen to the documents. They do not change their story."
+  },
+  "closing": {
+    "text": "Members of the jury, the prosecution asked you to rely on two witnesses. Look at what the records did to their accounts. Mr Renn told you he saw Ms Calloway's face under the landing light. The facilities log, E6, records that circuit B, which lights the east stairwell, lost supply at 11:24 pm and was not restored until 11:51 pm, with the stairwell's emergency light battery dead since 2 March. The eye clinic record, E8, records that his glasses were broken that afternoon and not replaced until 17 March, with distance vision of 6/60 without them. He told you he was at his desk; the alarm panel, E7, records service door SD-3 held open from 11:12 to 11:37 pm with the alert at his desk never acknowledged. Ms Arden told you she drove home at about nine; the garage record, E10, records the director's car leaving at 00:07. She told you only Ms Calloway's code was live; the strongroom log, E5, records that the door was opened at 11:27 pm with code slot 01, the director's master code, while Ms Calloway's slot 04 was last used at 1:35 pm. The insurance endorsement, E9, records that the director asked for the sapphire's agreed value to be raised from 2.4 to 6.5 million crowns on 21 February. Ms Calloway was in the museum that night, and the badge log, E3, shows it; she was wrong to tell the police otherwise. But being in the conservation studio is not theft, and nothing on this record puts her in the east wing, on that stairwell or in that strongroom. The prosecution must prove its case beyond reasonable doubt. On this record it has not. I ask you to return a verdict of not guilty on both charges."
+  },
+  "objections": { "default": { "action": "pass" }, "overrides": [] },
+  "crosses": {
+    "renn": [
+      {
+        "text": "Mr Renn, is it your evidence that at about twenty to twelve you saw Ms Calloway's face clearly at the top of the east stairwell, under the landing light?"
+      },
+      {
+        "text": "Mr Renn, this is the Aldermere Eye Clinic visit record, Exhibit E8. It records that at 4:30 that afternoon you went in because your glasses had broken at home, that you had no spare pair, and that the replacements were not ready until 17 March. It records your distance vision without glasses as 6/60, the top letter of the chart only. You were not wearing glasses on those stairs, were you? So you could not have recognised a face half a flight above you.",
+        "exhibitIds": ["E8"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "And this is the facilities maintenance log, Exhibit E6. It records that circuit B, which feeds the east stairwell lighting, lost supply at 11:24 pm and was not restored until 11:51 pm, and that the stairwell's emergency light battery had been dead since 2 March. So at twenty to twelve the stairwell was dark, wasn't it?",
+        "exhibitIds": ["E6"]
+      },
+      {
+        "text": "Let me turn to where you were before that. Is it your evidence that you stayed at the guard desk from eleven o'clock until you heard a noise and went to the east stairwell?"
+      },
+      {
+        "text": "Mr Renn, this is the intruder alarm panel log, Exhibit E7. It records that service door SD-3, the loading yard door at the foot of the east stairwell, was opened at 11:12 pm, that a held-open alert sounded at your guard desk at 11:13 and was never acknowledged, and that the door did not close until 11:37 pm. If you had been at your desk you would have answered that alert. You were not at your post, were you? You had gone out through SD-3.",
+        "exhibitIds": ["E7"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "So when you reached that stairwell, you did not see who pushed you, did you?"
+      }
+    ],
+    "arden": [
+      {
+        "text": "Ms Arden, when did you leave the museum on the evening of 14 March, and how did you get home?"
+      },
+      {
+        "text": "Ms Arden, this is the Halvorsen Square Garage permit record, Exhibit E10, for permit 0112, the director's bay. It records your car entering at 8:39 am on 14 March and not leaving until 00:07 on 15 March. That is three hours after the time you have just given the jury. You did not drive home at nine, did you? Your car was still in the garage after midnight.",
+        "exhibitIds": ["E10"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "Ms Arden, this is endorsement 7 to the museum's insurance policy, Exhibit E9. It records that on 21 February the sapphire's agreed value was increased from 2.4 million to 6.5 million crowns, and that the change was requested by you. You asked for that increase, didn't you, less than a month before the sapphire disappeared?",
+        "exhibitIds": ["E9"]
+      },
+      {
+        "text": "Is it your evidence that your master code was not used on the night of 14 March, and that only Ms Calloway's code could have opened the strongroom?"
+      },
+      {
+        "text": "Ms Arden, this is the strongroom door controller log, Exhibit E5. It records that at 11:27 pm on 14 March the strongroom door was opened with code slot 01, which the log itself lists as the director's master code, not Ms Calloway's slot 04. Her slot was last used at 1:35 pm and the door had been locked since 4:51. It was your master code that opened the strongroom that night, wasn't it, not Ms Calloway's?",
+        "exhibitIds": ["E5"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "The controller log lists slot 01 as the director's master code. Have you ever given that code to anyone else?"
+      }
+    ]
+  }
+}

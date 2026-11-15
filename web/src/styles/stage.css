@@ -1,0 +1,315 @@
+/* ───────────── frame ───────────── */
+.stage-frame {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, #241d33 0%, #0d0a13 70%),
+    var(--night);
+  overflow: hidden;
+}
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  overflow: hidden;
+  overflow: clip;
+  background: #1a1422;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+  font-size: 20px;
+}
+
+.court-scene {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+}
+.camera {
+  position: absolute;
+  inset: 0;
+  transition:
+    transform 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
+    transform-origin 1.1s cubic-bezier(0.3, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.scene-svg {
+  display: block;
+}
+.court-scene.freeze .camera {
+  filter: saturate(0.55) brightness(0.92);
+  transition:
+    transform 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
+    transform-origin 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
+    filter 0.35s ease;
+}
+.camera {
+  transition-property: transform, transform-origin, filter;
+}
+
+.spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle 420px at var(--fx) var(--fy), rgba(255, 236, 190, 0.1) 0%, rgba(255, 236, 190, 0) 45%, rgba(10, 6, 18, 0.42) 100%);
+  opacity: 0;
+  transition:
+    --fx 0.9s ease,
+    --fy 0.9s ease,
+    opacity 0.6s ease;
+}
+.spotlight.on {
+  opacity: 1;
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(8, 4, 14, 0.55) 100%);
+}
+
+.svg-sign {
+  font: 700 13px var(--font-display);
+  letter-spacing: 0.22em;
+  fill: var(--cream);
+  opacity: 0.85;
+}
+.svg-plate {
+  font: 700 10px var(--font-display);
+  letter-spacing: 0.12em;
+  fill: #4a2c10;
+}
+.stand-plate {
+  font-size: 13px;
+}
+
+/* ───────────── scenery motion ───────────── */
+.door-leaf {
+  transition: transform 0.45s cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+.door-leaf.open {
+  transform: scaleX(0.16);
+}
+.door-spill {
+  transition: opacity 0.4s;
+}
+.lamp-glow {
+  animation: lamp 6s ease-in-out infinite alternate;
+}
+@keyframes lamp {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.clock-hand-m {
+  animation: clock 120s linear infinite;
+}
+@keyframes clock {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ───────────── actors ───────────── */
+.actor {
+  transition:
+    transform 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
+    opacity 0.6s ease;
+}
+.actor-hidden {
+  pointer-events: none;
+}
+
+.ch-limb {
+  transition: transform 0.32s cubic-bezier(0.3, 0.8, 0.3, 1.2);
+}
+.ch-face,
+.ch-head-tilt {
+  transition: transform 0.5s ease;
+}
+.ch-breathe {
+  animation: breathe 4s ease-in-out infinite;
+  animation-delay: var(--breathe-delay, 0s);
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.008, 1.014);
+  }
+}
+.ch-head {
+  animation: sway 9s ease-in-out infinite;
+  animation-delay: var(--sway-delay, 0s);
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(1.6deg);
+  }
+  62% {
+    transform: rotate(-1.4deg);
+  }
+}
+.ch-eyes {
+  animation: blink var(--blink-dur, 5s) infinite;
+  animation-delay: var(--blink-delay, 0s);
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+@keyframes blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  95.5% {
+    transform: scaleY(0.08);
+  }
+}
+.ch-mouth-talk {
+  animation: talk var(--talk-dur, 0.18s) ease-in-out infinite alternate;
+}
+@keyframes talk {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.ch-talking .ch-head {
+  animation:
+    sway 9s ease-in-out infinite,
+    nod 0.9s ease-in-out infinite;
+}
+@keyframes nod {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -1.5px;
+  }
+}
+.ch-talking .ch-arm-talk {
+  animation: gesture 1.7s ease-in-out infinite;
+}
+@keyframes gesture {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-16deg);
+  }
+  70% {
+    transform: rotate(-6deg);
+  }
+}
+.ch-slump {
+  transition: transform 0.6s ease;
+}
+.ch-slumped .ch-slump {
+  transform: translateY(12px) rotate(2deg);
+}
+.ch-slumped .ch-head-tilt {
+  transform: rotate(11deg) translateY(5px) !important;
+}
+.ch-shocked .ch-upper {
+  animation: flinch 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes flinch {
+  0% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(10px, -14px) rotate(3deg);
+  }
+  60% {
+    transform: translate(-4px, 2px) rotate(-1deg);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.ch-gloom {
+  animation: gloom 2.4s ease-in-out infinite;
+}
+@keyframes gloom {
+  50% {
+    opacity: 0.35;
+  }
+}
+.ch-sweat {
+  animation: sweat 1.6s ease-in infinite;
+}
+.ch-sweat-2 {
+  animation: sweat 1.9s ease-in 0.5s infinite;
+}
+@keyframes sweat {
+  0% {
+    transform: translateY(-3px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+.ch-walking .ch-leg-a {
+  animation: stride 0.56s ease-in-out infinite alternate;
+}
+.ch-walking .ch-leg-b {
+  animation: stride 0.56s ease-in-out infinite alternate-reverse;
+}
+@keyframes stride {
+  from {
+    transform: rotate(14deg);
+  }
+  to {
+    transform: rotate(-14deg);
+  }
+}
+.ch-walking .ch-upper {
+  animation: bob 0.28s ease-in-out infinite alternate;
+}
+@keyframes bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera {
+    transition: none !important;
+    transform: none !important;
+  }
+  .ch-head,
+  .ch-talking .ch-head,
+  .ch-talking .ch-arm-talk,
+  .ch-walking .ch-leg-a,
+  .ch-walking .ch-leg-b,
+  .ch-walking .ch-upper,
+  .ch-breathe,
+  .ch-shocked .ch-upper,
+  .clock-hand-m {
+    animation: none !important;
+  }
+  .actor {
+    transition: opacity 0.4s ease;
+  }
+}

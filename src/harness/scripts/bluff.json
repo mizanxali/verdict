@@ -1,0 +1,57 @@
+{
+  "name": "bluff",
+  "description": "Regression: the player insists the witnesses are lying, claims to have proof, pressures and badgers, but never presents a breaker exhibit (only the irrelevant E1 and E2). No lie may crack and no answer may abandon a held lie.",
+  "caseId": "calloway",
+  "budgets": { "direct": 1, "cross": 5, "client": 1 },
+  "opening": {
+    "text": "Members of the jury, the prosecution's witnesses are not telling you the truth, and by the end of this trial you will know it. Watch them closely when I question them."
+  },
+  "closing": {
+    "text": "Members of the jury, you watched those witnesses squirm. Mr Renn could not look me in the eye and Ms Arden hid behind procedure. You know they were lying to you. Do not convict Iris Calloway on the word of people like that. Find her not guilty."
+  },
+  "objections": {
+    "default": { "action": "pass" },
+    "overrides": [{ "witnessId": "renn", "index": 0, "action": "object", "ground": "relevance" }]
+  },
+  "crosses": {
+    "renn": [
+      {
+        "text": "Mr Renn, let's not waste the jury's time. You're lying about what you saw on those stairs, aren't you?",
+        "fakeMarkers": ["[violation:badgering]"]
+      },
+      {
+        "text": "I have documents in my file that prove you never saw anyone's face that night. Wouldn't you rather tell the jury the truth now, before I put them to you?"
+      },
+      {
+        "text": "Look at this camera still, Exhibit E2. You cannot see the person's face in it. You couldn't see a face on the stairs either, could you? Admit it.",
+        "exhibitIds": ["E2"]
+      },
+      {
+        "text": "Come on, Mr Renn. You weren't at your desk at all, were you? Where were you really? Tell the jury. Where were you?",
+        "fakeMarkers": ["[violation:badgering]"]
+      },
+      {
+        "text": "Isn't it true that you made this whole identification up to protect yourself? Yes or no?"
+      }
+    ],
+    "arden": [
+      {
+        "text": "Ms Arden, you didn't go home at nine, did you? We both know you were still in that building."
+      },
+      {
+        "text": "This is Ms Calloway's statement to police, Exhibit E1. She says the sapphire was in its case when she closed the door at ten to five. Somebody opened that strongroom after her. That was you, wasn't it?",
+        "exhibitIds": ["E1"]
+      },
+      {
+        "text": "I can prove that your master code was used that night. Why don't you save everyone the trouble and admit it now?"
+      },
+      {
+        "text": "You're lying to this court, Ms Arden. Aren't you? Aren't you?",
+        "fakeMarkers": ["[violation:badgering]"]
+      },
+      {
+        "text": "Where were you when that sapphire disappeared? The truth this time."
+      }
+    ]
+  }
+}

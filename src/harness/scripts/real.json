@@ -1,0 +1,51 @@
+{
+  "name": "real",
+  "description": "Regression: the player finds the real contradictions and confronts each of the four prosecution lies with its breaker exhibit. Small budgets to stay cheap.",
+  "caseId": "calloway",
+  "budgets": { "direct": 1, "cross": 5, "client": 1 },
+  "opening": {
+    "text": "Members of the jury, the prosecution's case depends on a guard's identification and a director's account of who could open the strongroom. The museum's own records, the facilities log, the alarm panel, the garage record and the strongroom log, will let you test both. The prosecution must prove its case beyond reasonable doubt. I ask you to hold it to that."
+  },
+  "closing": {
+    "text": "Members of the jury, the facilities log, E6, records that the east stairwell lighting on circuit B was off from 11:24 to 11:51 pm. The alarm panel, E7, records service door SD-3 held open from 11:12 to 11:37 pm with the alert at the guard desk never acknowledged. The garage record, E10, records the director's car leaving at 00:07. The strongroom log, E5, records that the door was opened at 11:27 pm with slot 01, the director's master code, not Ms Calloway's slot 04. Those records are what the prosecution's two witnesses had to answer. The prosecution has not proved its case beyond reasonable doubt, and I ask you to find Ms Calloway not guilty."
+  },
+  "objections": { "default": { "action": "pass" }, "overrides": [] },
+  "crosses": {
+    "renn": [
+      {
+        "text": "Mr Renn, is it your evidence that at about twenty to twelve you saw Ms Calloway's face clearly at the top of the east stairwell, under the landing light?"
+      },
+      {
+        "text": "Mr Renn, this is the facilities maintenance log, Exhibit E6. It records that circuit B, which feeds the east stairwell lighting, lost supply at 11:24 pm and was not restored until 11:51 pm, and that the stairwell's emergency light battery had been dead since 2 March. So at twenty to twelve that stairwell was dark. How could you have seen anyone's face under the landing light?",
+        "exhibitIds": ["E6"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "Where were you between eleven o'clock and the moment you started up the east stairwell? Did you stay at the guard desk the whole time?"
+      },
+      {
+        "text": "Mr Renn, this is the intruder alarm panel log, Exhibit E7. It records that service door SD-3, the loading yard door at the foot of the east stairwell, was opened at 11:12 pm, that its held-open alert sounded at your desk from 11:13 and was never acknowledged, and that the door closed at 11:37 pm. You were not at your post, were you? You had gone out through SD-3 and propped it open.",
+        "exhibitIds": ["E7"],
+        "fakeMarkers": ["[confront]"]
+      }
+    ],
+    "arden": [
+      {
+        "text": "Ms Arden, when did you leave the museum on the evening of 14 March, and how did you get home?"
+      },
+      {
+        "text": "Ms Arden, this is the Halvorsen Square Garage permit record, Exhibit E10, for permit 0112, the director's bay. It records your car leaving the garage at 00:07 on 15 March, three hours after the time you have just given. You did not drive home at nine, did you?",
+        "exhibitIds": ["E10"],
+        "fakeMarkers": ["[confront]"]
+      },
+      {
+        "text": "Who could open the strongroom on the night of 14 March? Was any code used that night other than Ms Calloway's?"
+      },
+      {
+        "text": "Ms Arden, this is the strongroom door controller log, Exhibit E5. It records the door opened at 11:27 pm on 14 March with code slot 01, listed in the log as the director's master code, not Ms Calloway's slot 04, which was last used at 1:35 pm. So it was your master code, not Ms Calloway's, that opened the strongroom that night, wasn't it?",
+        "exhibitIds": ["E5"],
+        "fakeMarkers": ["[confront]"]
+      }
+    ]
+  }
+}

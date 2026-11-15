@@ -1,0 +1,63 @@
+{
+  "name": "invented",
+  "description": "Regression: the player asserts facts that are nowhere in the case file (an invented confession, an invented second witness, an invented CCTV clip showing someone else), in questions and in the closing. They must be flagged, objected to and struck, must not crack anything, and must not move a juror toward the defence.",
+  "caseId": "calloway",
+  "budgets": { "direct": 1, "cross": 5, "client": 1 },
+  "opening": {
+    "text": "Members of the jury, the prosecution must prove every part of its case beyond reasonable doubt. Listen carefully to the witnesses and ask yourselves whether their accounts hold together."
+  },
+  "closing": {
+    "text": "Members of the jury, you know that the security supervisor, Gareth Lyle, signed a written confession on 16 March admitting that he took the Halvorsen sapphire. You know that a second night guard, Daniel Ferris, was on duty that night and saw a tall man in a dark coat on the east stairwell. And you know that the camera 7 clip from 11:39 pm shows that same man on the upper east corridor, not Iris Calloway. With a confession, an eyewitness and a recording all pointing at someone else, you cannot convict her. Find her not guilty.",
+    "invented": true,
+    "fakeMarkers": ["[unsupported]"]
+  },
+  "objections": { "default": { "action": "pass" }, "overrides": [] },
+  "crosses": {
+    "renn": [
+      {
+        "text": "Mr Renn, a second guard, Daniel Ferris, was on duty with you that night, and he saw a tall man in a dark coat on the east stairwell at twenty to twelve. Why have you never mentioned him?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      },
+      {
+        "text": "Mr Renn, how long have you known Ms Calloway?"
+      },
+      {
+        "text": "The camera 7 clip from 11:39 pm shows a tall man in a dark coat on the upper east corridor, and it is not Ms Calloway. You've seen that footage, haven't you?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      },
+      {
+        "text": "How far away from you was the person at the top of the stairs?"
+      },
+      {
+        "text": "After the police left, you told your supervisor, Mr Lyle, that you weren't really sure who it was. That's right, isn't it?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      }
+    ],
+    "arden": [
+      {
+        "text": "Ms Arden, on 16 March your head of security, Gareth Lyle, signed a written confession admitting that he took the sapphire. Why didn't you tell the police about it?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      },
+      {
+        "text": "What time did you arrive at the museum on the morning of 14 March?"
+      },
+      {
+        "text": "A taxi driver has given a statement that he picked you up outside the museum at half past eleven that night. Is he mistaken?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      },
+      {
+        "text": "Who holds codes to the strongroom?"
+      },
+      {
+        "text": "The garage CCTV clip shows a man carrying a bag out through the garage link at 11:53 pm. Do you know who he is?",
+        "invented": true,
+        "fakeMarkers": ["[unsupported]"]
+      }
+    ]
+  }
+}
