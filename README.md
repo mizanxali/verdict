@@ -44,6 +44,8 @@ Somebody in that courtroom is lying. The documents in your case file can prove i
 
 ![The evidence picker, showing exhibit cards beside an eye clinic record styled as a medical form](docs/screenshots/evidence.png)
 
+![The case file binder open on the Witnesses tab, with portraits and prior statements](docs/screenshots/case-file.png)
+
 ## How a trial runs
 
 1. **Case file review.** You read the brief, ten exhibits, the witnesses' prior statements, the rules of the court and the jurors' backgrounds. Nothing is on the clock yet.
@@ -54,6 +56,8 @@ Somebody in that courtroom is lying. The documents in your case file can prove i
 6. **Closing arguments.** The prosecutor closes, and you get the last word.
 7. **Verdict.** The jurors vote one by one.
 8. **Deliberation replay.** You go into the jury room and see what moved each of them.
+
+![Iris Calloway walking from the defence table to the witness stand as the clerk announces her](docs/screenshots/taking-the-stand.png)
 
 ## The rules of the court
 
@@ -92,6 +96,8 @@ Each prosecution witness is hiding two things. A lie breaks only when both of th
 Attach the right document and ask about something else, and nothing happens. Accuse them of lying without the document, and they deny it. When a lie does break, the witness concedes as little as they can get away with, the contradiction is stamped on your scoreboard, and the jury takes note.
 
 The prosecutor plays by the same rule. Your client is holding back something of her own, and he has the paper to prove it.
+
+![The transcript log: the guard admits he was not wearing his glasses, tagged as a lie caught out](docs/screenshots/transcript.png)
 
 ### Credibility
 
@@ -132,6 +138,8 @@ You never see the leans during the trial. The jurors watch whoever is speaking a
 ### The verdict
 
 Each juror has their own threshold for acquittal and votes not guilty if their final lean reaches it. Four of five votes decide the case either way. Anything closer is a hung jury.
+
+![The verdict: four jurors vote not guilty, one guilty, and a NOT GUILTY stamp lands](docs/screenshots/verdict.png)
 
 ## How it works
 
